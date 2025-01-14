@@ -38,6 +38,7 @@ body:
       1. Set `debug_level` to `3` (or `2` if there's too much spam) in the Simple Voice Chat Discord Bridge configuration file
       2. Restart your server or use `/dvc reloadconfig`
       3. Upload the server logs here (they can be found in `logs/latest.txt`; make sure they don't include any sensitive info such as IP addresses)
+      
       We recommend pastebin services such as https://mclo.gs/.
   validations:
     required: true
@@ -49,7 +50,13 @@ body:
 - type: dropdown
   attributes:
     label: Loader/server software
-    options: ["Paper", "Purpur", "Fabric", "Quilt", "Other (PLEASE SPECIFY IN ADDITONAL CONTEXT"]
+    options: 
+      - -- PLEASE SELECT --
+      - Paper
+      - Purpur
+      - Fabric
+      - Quilt
+      - Other (PLEASE SPECIFY IN ADDITONAL CONTEXT
   validations:
     required: true
 - type: input
