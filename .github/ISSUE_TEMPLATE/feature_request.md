@@ -2,18 +2,25 @@
 name: Feature Request
 about: Have an idea for an improvement or feature? Use this template!
 title: ''
-labels: 'enchancement'
+labels: 'enhancement'
 assignees: 'amsam0'
+body:
+- type: textarea
+  label: Is your feature request related to a problem? Please describe.
+  placeholder: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+  validations:
+    required: true
+- type: textarea
+  label: Describe the solution you'd like
+  placeholder: A clear and concise description of what you want to happen.
+  validations:
+    required: true
+- type: textarea
+  label: Describe alternatives you've considered
+  placeholder: A clear and concise description of any alternative solutions or features you've considered.
+  validations:
+    required: true
+- type: textarea
+  label: Additional context
+  placeholder: Add any other context or screenshots about the feature request here.
 ---
-
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
-
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
-
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
-
-**Additional context**
-Add any other context or screenshots about the feature request here.
