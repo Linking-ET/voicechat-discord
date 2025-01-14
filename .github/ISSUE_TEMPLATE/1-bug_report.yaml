@@ -70,10 +70,15 @@ body:
     label: Simple Voice Chat Discord Bridge version
   validations:
     required: true
-- type: checkboxes
+- type: dropdown
   attributes:
-    options:
-      - label: Are you using offline mode?
+    label: Are you using offline mode?
+    options: 
+      - -- PLEASE SELECT --
+      - Yes
+      - No
+  validations:
+    required: true
 - type: textarea
   attributes:
     label: Additional context
