@@ -39,7 +39,7 @@ body:
       2. Restart your server or use `/dvc reloadconfig`
       3. Upload the server logs here (they can be found in `logs/latest.txt`; make sure they don't include any sensitive info such as IP addresses)
       
-      We recommend pastebin services such as https://mclo.gs/.
+      We recommend using pastebin services such as https://mclo.gs/.
   validations:
     required: true
 - type: input
