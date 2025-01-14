@@ -37,7 +37,8 @@ body:
       To be able to debug your problem, we need your server logs. To obtain them:
       1. Set `debug_level` to `3` (or `2` if there's too much spam) in the Simple Voice Chat Discord Bridge configuration file
       2. Restart your server or use `/dvc reloadconfig`
-      3. Upload the server logs here (they can be found in `logs/latest.txt`; make sure they don't include any sensitive info such as IP addresses)
+      3. **Reproduce the issue**
+      4. Upload the server logs here (they can be found in `logs/latest.txt`; make sure they don't include any sensitive info such as IP addresses)
       
       We recommend using pastebin services such as https://mclo.gs/.
   validations:
@@ -69,6 +70,11 @@ body:
     label: Simple Voice Chat Discord Bridge version
   validations:
     required: true
+- type: checkboxes
+  attributes:
+    options:
+      - label: Are you using offline mode?
+        required: true
 - type: textarea
   attributes:
     label: Additional context
