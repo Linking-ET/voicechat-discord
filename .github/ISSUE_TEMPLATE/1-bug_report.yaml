@@ -75,8 +75,8 @@ body:
     label: Are you using offline mode?
     options: 
       - -- PLEASE SELECT --
-      - Yes
-      - No
+      - "Yes"
+      - "No"
   validations:
     required: true
 - type: textarea
