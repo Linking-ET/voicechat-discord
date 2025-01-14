@@ -1,3 +1,4 @@
+blank_issues_enabled: false
 contact_links:
   - name: Pinned and closed issues
     url: https://github.com/amsam0/voicechat-discord/issues?q=is%3Aissue
