@@ -56,7 +56,7 @@ body:
       - Purpur
       - Fabric
       - Quilt
-      - Other (PLEASE SPECIFY IN ADDITONAL CONTEXT
+      - Other (PLEASE SPECIFY IN ADDITONAL CONTEXT)
   validations:
     required: true
 - type: input
