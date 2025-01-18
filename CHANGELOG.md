@@ -2,15 +2,21 @@
 
 This will mirror https://modrinth.com/plugin/simple-voice-chat-discord-bridge/changelog
 
+## 3.0.9
+
+- (Paper) Hopefully fix all broken versions (so 1.19-1.21.3), for real this time
+
+Code changes: https://github.com/amsam0/voicechat-discord/compare/3.0.8...3.0.9
+
 ## 3.0.8
 
-- Fix 1.21.4
+- (Paper) Fix 1.21.4
 
 Code changes: https://github.com/amsam0/voicechat-discord/compare/3.0.7...3.0.8
 
 ## 3.0.7
 
-- Attempt to fix <1.21.3
+- (Paper) Attempt to fix <1.21.3
 
 Code changes: https://github.com/amsam0/voicechat-discord/compare/3.0.6...3.0.7
 

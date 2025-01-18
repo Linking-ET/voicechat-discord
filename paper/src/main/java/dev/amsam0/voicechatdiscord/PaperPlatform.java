@@ -6,6 +6,7 @@ import de.maxhenkel.voicechat.api.ServerLevel;
 import de.maxhenkel.voicechat.api.ServerPlayer;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permissible;
 import org.jetbrains.annotations.Nullable;
@@ -30,9 +31,11 @@ public class PaperPlatform implements Platform {
     }
 
     private boolean shouldTryMoonrise = true;
+    private boolean shouldTryGetBukkitEntityWithoutReflection = true;
     private Method CraftWorld$getHandle;
     private Method ServerLevel$getEntityLookup;
     private Method EntityLookup$get;
+    private Method Entity$getBukkitEntity;
 
     private net.minecraft.world.entity.Entity getNmsEntityOld(net.minecraft.server.level.ServerLevel nmsLevel, UUID uuid) {
         try {
@@ -52,6 +55,28 @@ public class PaperPlatform implements Platform {
         }
     }
 
+    private Entity getBukkitEntityReflection(net.minecraft.world.entity.Entity nmsEntity) {
+        // Why do we need to use reflection for an unobfuscated method?
+        // Good question! Because Bukkit is fundamentally flawed
+        // On older versions, CraftEntity is located in something like org.bukkit.craftbukkit.v1_21_R2.entity.CraftEntity
+        // Notice the v1_21_R2. This changes between versions, and Paper's change that
+        // removes that version tag doesn't apply to older versions
+        // That means that java, when internally looking for Entity.getBukkitEntity() is
+        // expecting a method that returns org.bukkit.craftbukkit.v1_21_R2.entity.CraftEntity
+        // or wherever CraftEntity was during compilation
+        // That doesn't always happen
+        try {
+            if (Entity$getBukkitEntity == null)
+                Entity$getBukkitEntity = nmsEntity.getClass().getDeclaredMethod("getBukkitEntity");
+
+            return (Entity) Entity$getBukkitEntity.invoke(nmsEntity);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            debug(e);
+            // This will probably fail; see above notes
+            return nmsEntity.getBukkitEntity();
+        }
+    }
+
     private @Nullable Position getEntityPosition(net.minecraft.server.level.ServerLevel nmsLevel, UUID uuid) {
         net.minecraft.world.entity.Entity nmsEntity;
         if (shouldTryMoonrise) {
@@ -60,18 +85,34 @@ public class PaperPlatform implements Platform {
                 nmsEntity = nmsLevel.moonrise$getEntityLookup().get(uuid);
             } catch (NoSuchMethodError ignored) {
                 shouldTryMoonrise = false;
+                debug("Moonrise failed");
                 nmsEntity = getNmsEntityOld(nmsLevel, uuid);
             }
         } else {
-            debugExtremelyVerbose("Skipping moonrise attempt");
             nmsEntity = getNmsEntityOld(nmsLevel, uuid);
         }
         if (nmsEntity == null) return null;
-        var position = nmsEntity.position();
+
+        Entity bukkitEntity;
+        if (shouldTryGetBukkitEntityWithoutReflection) {
+            try {
+                bukkitEntity = nmsEntity.getBukkitEntity();
+            } catch (NoSuchMethodError ignored) {
+                shouldTryGetBukkitEntityWithoutReflection = false;
+                debug("Getting bukkit entity without reflection failed");
+                bukkitEntity = getBukkitEntityReflection(nmsEntity);
+            }
+        } else {
+            bukkitEntity = getBukkitEntityReflection(nmsEntity);
+        }
+        if (bukkitEntity == null) return null;
+
         return api.createPosition(
-                position.x,
-                position.y,
-                position.z
+                // Finally, a method that doesn't check thread safety
+                // Thank you Spigot authors
+                bukkitEntity.getLocation().getX(),
+                bukkitEntity.getLocation().getY(),
+                bukkitEntity.getLocation().getZ()
         );
     }
 
