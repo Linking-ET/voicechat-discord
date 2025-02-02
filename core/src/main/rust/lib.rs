@@ -1,6 +1,7 @@
 use std::fmt::{Debug, Display};
 
 use jni::{objects::JClass, JNIEnv};
+use once_cell::sync::Lazy;
 use runtime::RUNTIME;
 use tracing::{info, warn};
 
@@ -63,5 +64,9 @@ pub extern "system" fn Java_dev_amsam0_voicechatdiscord_Core_shutdownNatives<'lo
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
 ) {
-    RUNTIME.shutdown();
+    if Lazy::get(&RUNTIME).is_some() {
+        RUNTIME.shutdown();
+    } else {
+        info!("Runtime not yet initialized, so no need to shutdown");
+    }
 }

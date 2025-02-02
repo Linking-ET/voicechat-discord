@@ -5,6 +5,7 @@ This will mirror https://modrinth.com/plugin/simple-voice-chat-discord-bridge/ch
 ## 3.0.10
 
 - Fix a crash that could occur when initializing the Tokio runtime with only one core
+- Prevent initializing and then immediately shutting down the Tokio runtime on shutdown
 
 Code changes: https://github.com/amsam0/voicechat-discord/compare/3.0.9...3.0.10
 
