@@ -45,6 +45,12 @@ body:
     required: true
 - type: input
   attributes:
+    label: Operating system and version
+    description: If on linux, please include linux distro
+  validations:
+    required: true
+- type: input
+  attributes:
     label: Minecraft version
   validations:
     required: true
