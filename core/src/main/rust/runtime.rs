@@ -20,7 +20,8 @@ impl RuntimeHolder {
     #[inline]
     fn new() -> RuntimeHolder {
         let cpus = std::thread::available_parallelism().map_or(1, NonZeroUsize::get);
-        let worker_threads = cpus / 2;
+        // Worker threads must be at least 1
+        let worker_threads = (cpus / 2).max(1);
         info!(%worker_threads, "Initializing runtime");
         RuntimeHolder {
             runtime: MaybeUninit::new(

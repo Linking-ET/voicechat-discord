@@ -2,6 +2,12 @@
 
 This will mirror https://modrinth.com/plugin/simple-voice-chat-discord-bridge/changelog
 
+## 3.0.10
+
+- Fix a crash that could occur when initializing the Tokio runtime with only one core
+
+Code changes: https://github.com/amsam0/voicechat-discord/compare/3.0.9...3.0.10
+
 ## 3.0.9
 
 - (Paper) Hopefully fix all broken versions (so 1.19-1.21.3), for real this time
