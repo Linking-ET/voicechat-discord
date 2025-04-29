@@ -45,6 +45,11 @@ body:
     required: true
 - type: input
   attributes:
+    label: Hosting platform
+  validations:
+    required: true
+- type: input
+  attributes:
     label: Operating system and version
     description: If on linux, please include linux distro
   validations:
