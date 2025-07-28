@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 OS=""
 FILENAME=""
 case $(uname | tr '[:upper:]' '[:lower:]') in

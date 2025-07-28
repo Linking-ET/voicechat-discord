@@ -62,6 +62,8 @@ I recommend installing rust with rustup. As for `libopus`, you can install it wi
 The source code of the rust library is in `core/src/main/rust`. To build the rust library, simply run `cargo build` in `core`. To copy the build library into the correct directory so that it is loaded
 by the addon, run the `copy_natives.sh` script. (If you made a release build, run `copy_natives.sh release`. Otherwise it will copy the debug binary.)
 
+You can also just use the `build_and_copy_natives.sh` script—this will make a release build and copy the natives.
+
 ## `buildSrc` and `Properties`
 
 In `buildSrc`, there is a Kotlin object named `Properties`. It has constants of various properties and replaced `gradle.properties` when I migrated to using Kotlin for gradle build scripts.
