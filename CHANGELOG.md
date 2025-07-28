@@ -18,6 +18,7 @@ This will mirror https://modrinth.com/plugin/simple-voice-chat-discord-bridge/ch
 - Log messages on Fabric are now prefixed with `[voicechat-discord]`.
 - Attempting to shut down natives that have not been loaded will no longer cause the plugin to fail to shut down.
 - The Fabric Permissions API has been upgraded to version 0.3.3 in order to fix compatibility issues with recent Minecraft versions.
+- Due to recent GitHub deprecations, Linux natives will now be built on Ubuntu 22.04. This means that there may be errors on hosting providers using old glibc versions. If you encounter this issue, please see [this StackOverflow post](https://stackoverflow.com/questions/72513993/how-to-install-glibc-2-29-or-higher-in-ubuntu-18-04).
 
 Code changes: https://github.com/amsam0/voicechat-discord/compare/3.0.10...3.0.11
 
