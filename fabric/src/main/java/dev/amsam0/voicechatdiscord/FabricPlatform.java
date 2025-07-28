@@ -170,6 +170,7 @@ public class FabricPlatform implements Platform {
     }
 
     private static boolean canConstructClickEvent = true;
+    private static Method FabricPlatformClickEventHelper$toNative = null;
 
     private Text toNative(Component component) {
         try {
@@ -233,19 +234,19 @@ public class FabricPlatform implements Platform {
 
             var clickEvent = component.clickEvent();
             if (clickEvent != null) {
-                ClickEvent.Action action = null;
-                switch (clickEvent.action()) {
-                    case OPEN_URL -> action = ClickEvent.Action.OPEN_URL;
-                    case OPEN_FILE -> action = ClickEvent.Action.OPEN_FILE;
-                    case RUN_COMMAND -> action = ClickEvent.Action.RUN_COMMAND;
-                    case SUGGEST_COMMAND -> action = ClickEvent.Action.SUGGEST_COMMAND;
-                    case CHANGE_PAGE -> action = ClickEvent.Action.CHANGE_PAGE;
-                    case COPY_TO_CLIPBOARD -> action = ClickEvent.Action.COPY_TO_CLIPBOARD;
-                    default -> warn("Unknown click event action: " + clickEvent.action());
-                }
                 if (canConstructClickEvent) {
                     try {
                         Constructor<ClickEvent> constructor = ClickEvent.class.getConstructor(ClickEvent.Action.class, String.class);
+                        ClickEvent.Action action = null;
+                        switch (clickEvent.action()) {
+                            case OPEN_URL -> action = ClickEvent.Action.OPEN_URL;
+                            case OPEN_FILE -> action = ClickEvent.Action.OPEN_FILE;
+                            case RUN_COMMAND -> action = ClickEvent.Action.RUN_COMMAND;
+                            case SUGGEST_COMMAND -> action = ClickEvent.Action.SUGGEST_COMMAND;
+                            case CHANGE_PAGE -> action = ClickEvent.Action.CHANGE_PAGE;
+                            case COPY_TO_CLIPBOARD -> action = ClickEvent.Action.COPY_TO_CLIPBOARD;
+                            default -> warn("Unknown click event action: " + clickEvent.action());
+                        }
                         style = style.withClickEvent(constructor.newInstance(action, clickEvent.value()));
                     } catch (Throwable e) {
                         canConstructClickEvent = false;
@@ -254,8 +255,13 @@ public class FabricPlatform implements Platform {
                     }
                 }
                 if (!canConstructClickEvent) {
-                    ClickEvent.Action finalAction = action;
-                    style = style.withClickEvent(() -> finalAction);
+                    if (FabricPlatformClickEventHelper$toNative == null) {
+                        FabricPlatformClickEventHelper$toNative = Class.forName("dev.amsam0.voicechatdiscord.FabricPlatformClickEventHelper").getMethods()[0];
+                    }
+                    // We can't use action classes such as ClickEvent.OpenUrl in this method directly because those classes will try to load
+                    // on earlier minecraft versions (where they don't exist yet). By using them in a separate class, we avoid
+                    // loading that class (and thus the action classes) unless we need them
+                    style = style.withClickEvent((ClickEvent) FabricPlatformClickEventHelper$toNative.invoke(null, clickEvent));
                 }
             }
 
