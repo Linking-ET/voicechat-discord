@@ -10,7 +10,9 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.minecraft.GameVersion;
 import net.minecraft.MinecraftVersion;
+import net.minecraft.SharedConstants;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.command.ServerCommandSource;
@@ -19,6 +21,13 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.*;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.util.Arrays;
 import java.util.UUID;
 
 import static dev.amsam0.voicechatdiscord.Core.api;
@@ -47,11 +56,13 @@ public class FabricPlatform implements Platform {
                 : null;
     }
 
+    @SuppressWarnings("DataFlowIssue")
     public boolean isOperator(Object sender) {
         if (sender instanceof CommandContext<?> source)
             return ((ServerCommandSource) source.getSource()).hasPermissionLevel(2);
         if (sender instanceof ServerPlayerEntity player)
-            return player.hasPermissionLevel(2);
+            // player.hasPermissionLevel doesn't exist on 1.19.2
+            return player.getServer().getPermissionLevel(player.getGameProfile()) >= 2;
 
         return false;
     }
@@ -76,7 +87,11 @@ public class FabricPlatform implements Platform {
     }
 
     public void sendMessage(Player player, String message) {
-        ((ServerPlayerEntity) player.getPlayer()).sendMessage(toNative(mm(message)));
+        try {
+            ((ServerPlayerEntity) player.getPlayer()).sendMessage(toNative(mm(message)));
+        } catch (Throwable ignored) {
+            ((ServerPlayerEntity) player.getPlayer()).sendMessage(toNative(mm(message)), false);
+        }
     }
 
     public String getName(Player player) {
@@ -91,28 +106,47 @@ public class FabricPlatform implements Platform {
         return Loader.FABRIC;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public String getMinecraftVersion() {
-        return MinecraftVersion.CURRENT.name();
+        try {
+            return MinecraftVersion.CURRENT.name();
+        } catch (Throwable ignored) {
+            var methods = Arrays.stream(GameVersion.class.getMethods())
+                    .filter(m -> m.getParameterCount() == 0 && m.getReturnType() == String.class)
+                    .toList();
+            for (var method : methods) {
+                try {
+                    String version = (String) method.invoke(MinecraftVersion.CURRENT);
+                    if (version.contains(".")) return version;
+                } catch (Throwable ignored2) {
+                }
+            }
+            return "";
+        }
     }
 
+    private static final String logPrefix = "[" + Constants.PLUGIN_ID + "] ";
+
     public void info(String message) {
-        LOGGER.info(ansi(mm(message)));
+        LOGGER.info(logPrefix + "{}", ansi(mm(message)));
     }
 
     public void infoRaw(String message) {
-        LOGGER.info(message);
+        LOGGER.info(logPrefix + "{}", message);
     }
 
     // warn and error will already be colored yellow and red respectfully
 
     public void warn(String message) {
-        LOGGER.warn(message);
+        LOGGER.warn(logPrefix + "{}", message);
     }
 
     public void error(String message) {
-        LOGGER.error(message);
+        LOGGER.error(logPrefix + "{}", message);
     }
+
+    private static boolean canConstructClickEvent = true;
 
     private Text toNative(Component component) {
         try {
@@ -186,7 +220,19 @@ public class FabricPlatform implements Platform {
                     case COPY_TO_CLIPBOARD -> action = ClickEvent.Action.COPY_TO_CLIPBOARD;
                     default -> warn("Unknown click event action: " + clickEvent.action());
                 }
-                style = style.withClickEvent(new ClickEvent(action, clickEvent.value()));
+                if (canConstructClickEvent) {
+                    try {
+                        Constructor<ClickEvent> constructor = ClickEvent.class.getConstructor(ClickEvent.Action.class, String.class);
+                        style = style.withClickEvent(constructor.newInstance(action, clickEvent.value()));
+                    } catch (Throwable e) {
+                        canConstructClickEvent = false;
+                        debug("Constructing click event failed");
+                    }
+                }
+                if (!canConstructClickEvent) {
+                    ClickEvent.Action finalAction = action;
+                    style = style.withClickEvent(() -> finalAction);
+                }
             }
 
             var hoverEvent = component.hoverEvent();
