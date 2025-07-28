@@ -1,53 +1,40 @@
 @Suppress("ConstPropertyName", "MemberVisibilityCanBePrivate")
 object Properties {
-    // "dev" versions refer to the development environment,
-    // while "required" version refer to the version the mod says it needs
-    // if not specified, assume "required"
-
     const val javaVersion = 21
 
-    const val minecraftRequiredVersion = "1.19.4"
-
-    /* Paper */
-    const val paperApiVersion = "1.19"
-    const val paperMinecraftDevVersion = "1.21.4"
-    const val paperDevBundleVersion = "1.21.4-R0.1-SNAPSHOT"
-
-    /* Fabric (https://fabricmc.net/develop) */
-    const val fabricLoaderRequiredVersion = "0.14.22"
-    const val fabricMinecraftDevVersion = "1.21.3"
-    const val yarnMappingsDevVersion = "$fabricMinecraftDevVersion+build.2"
-    const val fabricLoaderDevVersion = "0.16.9"
-    const val fabricApiDevVersion = "0.107.3+$fabricMinecraftDevVersion"
-
-    /* Dependencies */
-    const val voicechatApiVersion = "2.4.11"
-    const val voicechatModRuntimeVersion = "2.5.25"
-    const val yamlConfigurationVersion = "2.0.2"
-    const val javaSemverVersion = "0.10.2"
-    const val gsonVersion = "2.10.1"
-    const val adventureVersion = "4.14.0"
-
     /* Project */
-    const val pluginVersion = "3.0.10"
+    const val pluginVersion = "3.0.11" // Make sure to sync with setup_servers.sh
     const val mavenGroup = "dev.amsam0.voicechatdiscord"
     const val archivesBaseName = "voicechat-discord"
     const val modrinthProjectId = "S1jG5YV5"
     val supportedMinecraftVersions = listOf(
-        "1.19.4",
-        "1.20",
+        // We follow https://modrepo.de/minecraft/voicechat/wiki/supported_versions
+        "1.19.2",
         "1.20.1",
-        "1.20.2",
-        "1.20.3",
-        "1.20.4",
-        "1.20.5",
-        "1.20.6",
-        "1.21",
         "1.21.1",
-        "1.21.2",
-        "1.21.3",
-        "1.21.4"
+        "1.21.4",
+        "1.21.5",
+        "1.21.8"
     )
+
+    val minecraftRequiredVersion = supportedMinecraftVersions.first()
+    val minecraftBuildVersion = supportedMinecraftVersions.last()
+
+    /* Paper */
+    const val paperApiVersion = "1.19"
+    val paperDevBundleVersion = "$minecraftBuildVersion-R0.1-SNAPSHOT"
+
+    /* Fabric (https://fabricmc.net/develop) */
+    const val fabricLoaderVersion = "0.16.13" // Make sure to sync with setup_servers.sh
+    val yarnMappingsDevVersion = "$minecraftBuildVersion+build.1"
+    val fabricApiDevVersion = "0.130.0+$minecraftBuildVersion"
+
+    /* Dependencies */
+    const val voicechatApiVersion = "2.4.11"
+    const val yamlConfigurationVersion = "2.0.2"
+    const val javaSemverVersion = "0.10.2"
+    const val gsonVersion = "2.10.1"
+    const val adventureVersion = "4.14.0"
 
     /* Gradle Plugins */
     const val minotaurVersion = "2.+"

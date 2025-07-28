@@ -2,7 +2,7 @@ plugins {
     java
     id("com.modrinth.minotaur") version Properties.minotaurVersion
     id("com.github.johnrengelman.shadow") version Properties.shadowVersion
-    id("fabric-loom") version "1.9-SNAPSHOT" // https://fabricmc.net/develop
+    id("fabric-loom") version "1.11-SNAPSHOT" // https://fabricmc.net/develop
 }
 
 project.version = Properties.pluginVersion
@@ -30,7 +30,7 @@ tasks.processResources {
 
     val properties = mapOf(
         "version" to Properties.pluginVersion,
-        "fabricLoaderVersion" to Properties.fabricLoaderRequiredVersion,
+        "fabricLoaderVersion" to Properties.fabricLoaderVersion,
         "minecraftVersion" to Properties.minecraftRequiredVersion,
         "voicechatApiVersion" to Properties.voicechatApiVersion,
         "javaVersion" to Properties.javaVersion.toString(),
@@ -72,15 +72,14 @@ tasks.remapJar {
 }
 
 dependencies {
-    minecraft("com.mojang:minecraft:${Properties.fabricMinecraftDevVersion}")
+    minecraft("com.mojang:minecraft:${Properties.minecraftBuildVersion}")
     mappings("net.fabricmc:yarn:${Properties.yarnMappingsDevVersion}:v2")
-    modImplementation("net.fabricmc:fabric-loader:${Properties.fabricLoaderDevVersion}")
+    modImplementation("net.fabricmc:fabric-loader:${Properties.fabricLoaderVersion}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${Properties.fabricApiDevVersion}")
 
     modImplementation("me.lucko:fabric-permissions-api:0.2-SNAPSHOT")
     include("me.lucko:fabric-permissions-api:0.2-SNAPSHOT")
 
-    modRuntimeOnly("maven.modrinth:simple-voice-chat:fabric-${Properties.fabricMinecraftDevVersion}-${Properties.voicechatModRuntimeVersion}")
     compileOnly("de.maxhenkel.voicechat:voicechat-api:${Properties.voicechatApiVersion}")
 
     implementation("org.bspfsystems:yamlconfiguration:${Properties.yamlConfigurationVersion}")

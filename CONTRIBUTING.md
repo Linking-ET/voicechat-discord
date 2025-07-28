@@ -8,6 +8,24 @@ This document will not go over any of the following topics:
 -   Basics of Java
 -   Minecraft modding/plugin development
 
+## Testing your changes
+
+For better or for worse, Simple Voice Chat Discord Bridge attempts to support all of its supported versions (which are based on [Simple Voice Chat's supported versions](https://modrepo.de/minecraft/voicechat/wiki/supported_versions)) with a single jar for each platform. This means that running a server and testing your changes with the version we are building for (the latest supported) will not work. You instead need to run a server on each supported version and test each version manually with the jar built for the latest version. This is not easily possible with Gradle, so I created the `run_server.sh` script. It will download all needed jars for the given platform and version, symlink your config (from `config.yml`), copy the built jar, and run the server.
+
+You will still need to manually setup client instances: one with SVC installed, and one without SVC installed. I strongly recommend you use Prism Launcher or another multi-instance launcher.
+
+Example development workflow:
+
+```
+# Build plugin/mod for platform with IntelliJ or Gradle
+./run_server <platform> <version>
+# Start client with SVC on <version>
+# Start client without SVC on <version>
+# Client without SVC runs /dvc start or does other testing
+```
+
+Note that if you are using Nix, you can use the `shell.nix` in the repository to obtain `run_server.sh`'s dependencies.
+
 ## Using `net.minecraft` classes on Paper
 
 Since this is a pretty important topic, I've chosen to put this section at the top. This is only relevant for the Paper side of things, since Fabric has intermediary mappings which solves the whole
@@ -39,7 +57,7 @@ As of 3.0.0, voicechat-discord uses JNI and a rust library to communicate with D
 -   `libopus`
 -   `pkg-config`
 
-I recommend installing rust with rustup. As for `libopus`, you can install it with your system's package manager. If you use nix, a `shell.nix` file is provided in the `core` directory.
+I recommend installing rust with rustup. As for `libopus`, you can install it with your system's package manager. If you use nix, a `shell.nix` file is provided in the root directory of the repository.
 
 The source code of the rust library is in `core/src/main/rust`. To build the rust library, simply run `cargo build` in `core`. To copy the build library into the correct directory so that it is loaded
 by the addon, run the `copy_natives.sh` script. (If you made a release build, run `copy_natives.sh release`. Otherwise it will copy the debug binary.)

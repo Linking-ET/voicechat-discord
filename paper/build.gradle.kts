@@ -2,8 +2,7 @@ plugins {
     java
     id("com.modrinth.minotaur") version Properties.minotaurVersion
     id("com.github.johnrengelman.shadow") version Properties.shadowVersion
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.11"
-    id("xyz.jpenilla.run-paper") version "2.3.0"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.18"
 }
 
 project.version = Properties.pluginVersion
@@ -31,10 +30,6 @@ tasks.processResources {
     filesMatching("plugin.yml") {
         expand(properties)
     }
-}
-
-tasks.runServer {
-    minecraftVersion(Properties.paperMinecraftDevVersion)
 }
 
 tasks.shadowJar {
