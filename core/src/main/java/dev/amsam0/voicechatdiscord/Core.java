@@ -39,11 +39,11 @@ public final class Core {
     public static void enable() {
         try {
             LibraryLoader.load("voicechat_discord");
+            initializeNatives();
         } catch (Exception e) {
             platform.error("Failed to load natives: " + e.getMessage());
             throw new RuntimeException(e);
         }
-        initializeNatives();
 
         new Thread(UpdateChecker::checkForUpdate, "voicechat-discord: Update Checker").start();
         loadConfig();
@@ -57,9 +57,12 @@ public final class Core {
 
         platform.info("Successfully shutdown " + toShutdown + " bot" + (toShutdown != 1 ? "s" : ""));
 
-        shutdownNatives();
-
-        platform.info("Successfully shutdown native runtime");
+        try {
+            shutdownNatives();
+            platform.info("Successfully shutdown native runtime");
+        } catch (Exception e) {
+            platform.error("Failed to shutdown native runtime: " + e.getMessage());
+        }
     }
 
     @SuppressWarnings({"DataFlowIssue", "unchecked", "ResultOfMethodCallIgnored"})
