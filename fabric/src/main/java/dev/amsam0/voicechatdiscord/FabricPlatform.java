@@ -12,7 +12,6 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.minecraft.GameVersion;
 import net.minecraft.MinecraftVersion;
-import net.minecraft.SharedConstants;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.command.ServerCommandSource;
@@ -21,16 +20,14 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.*;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.UUID;
 
 import static dev.amsam0.voicechatdiscord.Core.api;
+import static dev.amsam0.voicechatdiscord.Core.platform;
 import static dev.amsam0.voicechatdiscord.FabricMod.LOGGER;
 
 public class FabricPlatform implements Platform {
@@ -44,16 +41,41 @@ public class FabricPlatform implements Platform {
         return api.fromServerPlayer(((ServerCommandSource) context.getSource()).getPlayer());
     }
 
+    private static boolean canUseGetEntityDirect = true;
+    private static Method ServerWorld$getEntity = null;
+
     public @Nullable Position getEntityPosition(ServerLevel level, UUID uuid) {
         ServerWorld world = (ServerWorld) level.getServerLevel();
-        Entity entity = world.getEntity(uuid);
-        return entity != null ?
-                api.createPosition(
-                        entity.getX(),
-                        entity.getY(),
-                        entity.getZ()
-                )
-                : null;
+        Entity entity = null;
+        if (canUseGetEntityDirect) {
+            try {
+                entity = world.getEntity(uuid);
+            } catch (Throwable e) {
+                canUseGetEntityDirect = false;
+                debug("Couldn't get entity directly: " + e.getMessage());
+            }
+        }
+        if (!canUseGetEntityDirect) {
+            if (ServerWorld$getEntity == null) {
+                ServerWorld$getEntity = Arrays.stream(ServerWorld.class.getMethods())
+                        .filter(method -> method.getParameterCount() == 1)
+                        .filter(method -> Arrays.equals(method.getParameterTypes(), new Class[]{UUID.class}))
+                        .filter(method -> method.getReturnType() == Entity.class)
+                        .findFirst()
+                        .get();
+            }
+            try {
+                entity = (Entity) ServerWorld$getEntity.invoke(world, uuid);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        //noinspection DataFlowIssue
+        return api.createPosition(
+                entity.getX(),
+                entity.getY(),
+                entity.getZ()
+        );
     }
 
     @SuppressWarnings("DataFlowIssue")
@@ -226,7 +248,7 @@ public class FabricPlatform implements Platform {
                         style = style.withClickEvent(constructor.newInstance(action, clickEvent.value()));
                     } catch (Throwable e) {
                         canConstructClickEvent = false;
-                        debug("Constructing click event failed");
+                        debug("Constructing click event failed: " + e.getMessage());
                     }
                 }
                 if (!canConstructClickEvent) {
