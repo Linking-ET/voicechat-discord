@@ -92,7 +92,8 @@ public class DiscordBot {
             platform.debug("Logged into the bot with vc_id " + vcId);
             return true;
         } catch (Exception e) {
-            platform.error("Failed to login to the bot with vc_id " + vcId + ": " + e.getMessage());
+            platform.error("Failed to login to the bot with vc_id " + vcId + ": " + e);
+            platform.debug(e);
             if (player != null) {
                 platform.sendMessage(
                         player,
@@ -114,7 +115,8 @@ public class DiscordBot {
         try {
             vcName = _start(ptr);
         } catch (Exception e) {
-            platform.error("Failed to start voice connection for bot with vc_id " + vcId + ": " + e.getMessage());
+            platform.error("Failed to start voice connection for bot with vc_id " + vcId + ": " + e);
+            platform.debug(e);
             platform.sendMessage(
                     player,
                     "<red>Failed to start voice connection. Please contact your server owner since they will be able to see the error message."
@@ -258,7 +260,8 @@ public class DiscordBot {
         try {
             _stop(ptr);
         } catch (Exception e) {
-            platform.warn("Failed to stop bot with vc_id " + vcId + ": " + e.getMessage());
+            platform.warn("Failed to stop bot with vc_id " + vcId + ": " + e);
+            platform.debug(e);
         }
     }
 

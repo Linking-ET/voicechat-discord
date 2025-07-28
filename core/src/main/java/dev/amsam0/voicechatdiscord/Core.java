@@ -41,7 +41,7 @@ public final class Core {
             LibraryLoader.load("voicechat_discord");
             initializeNatives();
         } catch (Exception e) {
-            platform.error("Failed to load natives: " + e.getMessage());
+            platform.error("Failed to load natives: " + e);
             throw new RuntimeException(e);
         }
 
@@ -61,7 +61,8 @@ public final class Core {
             shutdownNatives();
             platform.info("Successfully shutdown native runtime");
         } catch (Exception e) {
-            platform.error("Failed to shutdown native runtime: " + e.getMessage());
+            platform.error("Failed to shutdown native runtime: " + e);
+            platform.debug(e);
         }
     }
 
@@ -76,10 +77,10 @@ public final class Core {
         try {
             config.load(configFile);
         } catch (IOException e) {
-            platform.warn("IOException when loading config: " + e.getMessage());
+            platform.warn("IOException when loading config: " + e);
             platform.debug(e);
         } catch (InvalidConfigurationException e) {
-            platform.error("Failed to load config file: " + e.getMessage());
+            platform.error("Failed to load config file: " + e);
             throw new RuntimeException(e);
         }
 
@@ -97,7 +98,7 @@ public final class Core {
         try {
             config.save(configFile);
         } catch (IOException e) {
-            platform.error("Failed to save config file: " + e.getMessage());
+            platform.error("Failed to save config file: " + e);
             throw new RuntimeException(e);
         }
 
@@ -119,8 +120,7 @@ public final class Core {
             try {
                 bots.add(new DiscordBot((String) bot.get("token"), (Long) bot.get("vc_id")));
             } catch (ClassCastException e) {
-                platform.error(
-                        "Failed to load a bot. Please make sure that the token property is a string and the vc_id property is a number.");
+                platform.error("Failed to load a bot. Please make sure that the token property is a string and the vc_id property is a number.");
             }
         }
 
@@ -148,7 +148,7 @@ public final class Core {
             try {
                 discordBot.stop();
             } catch (Throwable e) {
-                platform.error("Error when stopping bot: " + e.getMessage());
+                platform.error("Error when stopping bot: " + e);
                 platform.debug(e);
             }
             discordBot.free();
@@ -226,7 +226,7 @@ public final class Core {
                 throw new RuntimeException(message);
             }
         } catch (IllegalArgumentException | ParseException e) {
-            platform.error("Failed to parse SVC version: " + e.getMessage());
+            platform.error("Failed to parse SVC version: " + e);
             platform.debug(e);
             platform.warn("Assuming SVC is " + VOICECHAT_MIN_VERSION + " or later. If not, things will break.");
         }

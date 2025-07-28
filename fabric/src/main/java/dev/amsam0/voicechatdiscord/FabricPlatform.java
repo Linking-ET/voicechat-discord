@@ -52,7 +52,8 @@ public class FabricPlatform implements Platform {
                 entity = world.getEntity(uuid);
             } catch (Throwable e) {
                 canUseGetEntityDirect = false;
-                debug("Couldn't get entity directly: " + e.getMessage());
+                debug("Couldn't get entity directly: " + e);
+                debug(e);
             }
         }
         if (!canUseGetEntityDirect) {
@@ -248,7 +249,8 @@ public class FabricPlatform implements Platform {
                         style = style.withClickEvent(constructor.newInstance(action, clickEvent.value()));
                     } catch (Throwable e) {
                         canConstructClickEvent = false;
-                        debug("Constructing click event failed: " + e.getMessage());
+                        debug("Constructing click event failed: " + e);
+                        debug(e);
                     }
                 }
                 if (!canConstructClickEvent) {
@@ -274,7 +276,7 @@ public class FabricPlatform implements Platform {
 
             return text;
         } catch (Throwable e) {
-            warn("Error when converting component to native: " + e.getMessage());
+            warn("Error when converting component to native: " + e);
             debug(e);
             return Text.of(LegacyComponentSerializer.legacySection().serialize(component));
         }

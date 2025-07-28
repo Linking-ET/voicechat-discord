@@ -30,7 +30,7 @@ public final class GroupManager {
             passwordField.setAccessible(true);
             return (String) passwordField.get(groupObject);
         } catch (Throwable e) {
-            platform.warn("Could not get password of group \"" + group.getName() + "\" (" + group.getId() + "): " + e.getMessage());
+            platform.warn("Could not get password of group \"" + group.getName() + "\" (" + group.getId() + "): " + e);
             platform.debug(e);
             return null;
         }

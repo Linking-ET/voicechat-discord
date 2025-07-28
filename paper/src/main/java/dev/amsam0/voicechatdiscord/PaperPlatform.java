@@ -50,6 +50,7 @@ public class PaperPlatform implements Platform {
 
             return (net.minecraft.world.entity.Entity) EntityLookup$get.invoke(entityLookup, uuid);
         } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+            debug("Failed to get nms entity: " + e);
             debug(e);
             // This should always fail unfortunately, but we don't have any other options
             return nmsLevel.getEntity(uuid);
@@ -72,6 +73,7 @@ public class PaperPlatform implements Platform {
 
             return (Entity) Entity$getBukkitEntity.invoke(nmsEntity);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            debug("Failed to get bukkit entity: " + e);
             debug(e);
             // This will probably fail; see above notes
             return nmsEntity.getBukkitEntity();

@@ -55,7 +55,7 @@ public final class UpdateChecker {
                 return false;
             }
         } catch (Throwable e) {
-            platform.error("Failed to check for update: " + e.getMessage());
+            platform.error("Failed to check for update: " + e);
             platform.debug(e);
             return false;
         }
@@ -88,8 +88,7 @@ public final class UpdateChecker {
                         tags.add(Version.parse(name));
                         platform.debugVerbose("Found tag: " + name);
                     } catch (IllegalArgumentException | ParseException e) {
-                        platform.debug("Failed to parse tag: " + name);
-                        platform.debug("with error: " + e.getMessage());
+                        platform.debug("Failed to parse tag: " + name + " with error: " + e);
                         platform.debug(e);
                     }
                 } catch (IllegalStateException | AssertionError ignored) {

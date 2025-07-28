@@ -49,7 +49,7 @@ public final class PaperPlugin extends JavaPlugin implements Listener {
             }
         } catch (IllegalArgumentException | ParseException e) {
             var v = getServer().getMinecraftVersion();
-            platform.warn("Unable to parse server version (" + v + "): " + e.getMessage());
+            platform.warn("Unable to parse server version (" + v + "): " + e);
             platform.debug(e);
 
             if (v.equals("1.19.4") ||
