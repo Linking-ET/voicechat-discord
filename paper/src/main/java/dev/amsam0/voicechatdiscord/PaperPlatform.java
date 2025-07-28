@@ -4,6 +4,7 @@ import com.mojang.brigadier.context.CommandContext;
 import de.maxhenkel.voicechat.api.Position;
 import de.maxhenkel.voicechat.api.ServerLevel;
 import de.maxhenkel.voicechat.api.ServerPlayer;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -188,6 +189,11 @@ public class PaperPlatform implements Platform {
 
     public Loader getLoader() {
         return Loader.PAPER;
+    }
+
+    @Override
+    public String getMinecraftVersion() {
+        return Bukkit.getMinecraftVersion();
     }
 
     public void info(String message) {

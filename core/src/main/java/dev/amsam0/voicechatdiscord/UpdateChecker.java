@@ -7,10 +7,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +21,8 @@ import static dev.amsam0.voicechatdiscord.Core.platform;
 
 public final class UpdateChecker {
     public static @Nullable String updateMessage = null;
+
+    private static final String modrinthVersionPage = "https://modrinth.com/plugin/" + MODRINTH_PROJECT_ID + "/versions?g=" + platform.getMinecraftVersion() + "&l=" + platform.getLoader().name;
 
     /**
      * Returns true if successful, false if not successful
@@ -40,8 +42,7 @@ public final class UpdateChecker {
             if (latest != null) {
                 if (latest.isHigherThan(current)) {
                     platform.debug("New update!");
-                    String modrinthVersionPage = getModrinthVersionPage(latest);
-                    platform.debugVerbose("Modrinth version page for " + latest + ": " + modrinthVersionPage);
+                    platform.debugVerbose("Modrinth version page: " + modrinthVersionPage);
                     String message = "<green>A new version of Simple Voice Chat Discord Bridge is available! " +
                             "You are currently on version <white>" + current +
                             "<green> and the latest version is version <white>" + latest +
@@ -60,11 +61,11 @@ public final class UpdateChecker {
         }
     }
 
-    private static List<Version> getTags() throws IOException {
+    private static List<Version> getTags() throws Throwable {
         HttpURLConnection connection = null;
 
         try {
-            URL url = new URL("https://api.github.com/repos/amsam0/voicechat-discord/tags");
+            URL url = new URI("https://api.github.com/repos/amsam0/voicechat-discord/tags").toURL();
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestProperty("Accept", "application/vnd.github+json");
             connection.setRequestProperty("X-GitHub-Api-Version", "2022-11-28");
@@ -96,57 +97,6 @@ public final class UpdateChecker {
                 }
             }
             return tags;
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
-        }
-    }
-
-    private static String getModrinthVersionPage(Version latestVersion) throws IOException {
-        HttpURLConnection connection = null;
-
-        try {
-            //                                                                                                 [  "                                   "  ]
-            URL url = new URL("https://api.modrinth.com/v2/project/" + MODRINTH_PROJECT_ID + "/version?loaders=%5B%22" + platform.getLoader().name + "%22%5D");
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestProperty("User-Agent", "amsam0/voicechat-discord/" + VERSION);
-            connection.setUseCaches(false);
-
-            InputStream inputStream = connection.getInputStream();
-            JsonObject[] jsonVersions = new Gson().fromJson(new InputStreamReader(inputStream), JsonObject[].class);
-            inputStream.close();
-
-            for (JsonObject jsonVersion : jsonVersions) {
-                JsonElement jsonVersionNumber = jsonVersion.get("version_number");
-                if (jsonVersionNumber == null) {
-                    platform.debug("Couldn't get version_number for version: " + jsonVersion);
-                    continue;
-                }
-                try {
-                    String versionNumber = jsonVersionNumber.getAsJsonPrimitive().getAsString();
-                    if (versionNumber.equals(latestVersion.toString())) {
-                        platform.debug("Found latest version on Modrinth: " + jsonVersion);
-                        JsonElement jsonId = jsonVersion.get("id");
-                        if (jsonId == null) {
-                            platform.debug("Couldn't get id");
-                            break;
-                        }
-                        try {
-                            String id = jsonId.getAsJsonPrimitive().getAsString();
-                            platform.debugVerbose("Got id: " + id);
-                            return "https://modrinth.com/plugin/" + MODRINTH_PROJECT_ID + "/version/" + id;
-                        } catch (IllegalStateException | AssertionError ignored) {
-                            platform.debug("id is not string");
-                        }
-                    }
-                } catch (IllegalStateException | AssertionError ignored) {
-                    platform.debug("version_number is not string for version: " + jsonVersion);
-                }
-            }
-
-            platform.debugVerbose("Couldn't find version on Modrinth, returning all versions page");
-            return "https://modrinth.com/plugin/" + MODRINTH_PROJECT_ID + "/versions";
         } finally {
             if (connection != null) {
                 connection.disconnect();

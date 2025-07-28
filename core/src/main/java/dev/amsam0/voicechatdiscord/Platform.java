@@ -37,6 +37,8 @@ public interface Platform {
 
     Loader getLoader();
 
+    String getMinecraftVersion();
+
     // Paper uses log4j, Fabric uses slf4j
     void info(String message);
 

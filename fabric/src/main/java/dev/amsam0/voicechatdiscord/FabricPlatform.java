@@ -10,6 +10,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.minecraft.MinecraftVersion;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.command.ServerCommandSource;
@@ -88,6 +89,11 @@ public class FabricPlatform implements Platform {
 
     public Loader getLoader() {
         return Loader.FABRIC;
+    }
+
+    @Override
+    public String getMinecraftVersion() {
+        return MinecraftVersion.CURRENT.name();
     }
 
     public void info(String message) {
