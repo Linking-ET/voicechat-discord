@@ -49,13 +49,10 @@ if [ "$platform" == "paper" ]; then
   fi
 
   # Copy config
-  file="paper/run/$minecraftVersion/plugins/voicechat-discord/config.yml"
-  if [ ! -L $file ]; then
-    ln -s config.yml $file
-    echo -e "${yellow}Symlinked config.yml to $file${clear}"
-  else
-    echo -e "${green}config.yml already symlinked${clear}"
-  fi
+  from="config.yml"
+  to="paper/run/$minecraftVersion/plugins/voicechat-discord/config.yml"
+  cp $from $to
+  echo -e "${green}Copied config from $from to $to${clear}"
 
   # Copy mod
   from="paper/build/libs/voicechat-discord-paper-$pluginVersion.jar"
@@ -106,13 +103,10 @@ elif [ "$platform" == "fabric" ]; then
   fi
 
   # Copy config
-  file="fabric/run/$minecraftVersion/config/voicechat-discord.yml"
-  if [ ! -L $file ]; then
-    ln -s config.yml $file
-    echo -e "${yellow}Symlinked config.yml to $file${clear}"
-  else
-    echo -e "${green}Config already symlinked${clear}"
-  fi
+  from="config.yml"
+  to="fabric/run/$minecraftVersion/config/voicechat-discord.yml"
+  cp $from $to
+  echo -e "${green}Copied config from $from to $to${clear}"
 
   # Copy mod
   from="fabric/build/libs/voicechat-discord-fabric-$pluginVersion.jar"
