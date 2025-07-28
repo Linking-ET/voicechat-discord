@@ -77,8 +77,8 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${Properties.fabricLoaderVersion}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${Properties.fabricApiDevVersion}")
 
-    modImplementation("me.lucko:fabric-permissions-api:0.2-SNAPSHOT")
-    include("me.lucko:fabric-permissions-api:0.2-SNAPSHOT")
+    modImplementation("me.lucko:fabric-permissions-api:0.3.3")
+    include("me.lucko:fabric-permissions-api:0.3.3")
 
     compileOnly("de.maxhenkel.voicechat:voicechat-api:${Properties.voicechatApiVersion}")
 
