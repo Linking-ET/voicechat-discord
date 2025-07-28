@@ -28,7 +28,7 @@ public final class UpdateChecker {
     public static boolean checkForUpdate() {
         try {
             List<Version> tags = getTags();
-            Version latest = tags.get(0);
+            Version latest = null;
             for (Version tag : tags) {
                 if (tag.isHigherThan(latest))
                     latest = tag;
@@ -37,18 +37,22 @@ public final class UpdateChecker {
             Version current = Version.parse(VERSION);
 
             platform.debug("Current version is " + current + ", latest version is " + latest);
-            if (latest.isHigherThan(current)) {
-                platform.debug("New update!");
-                String modrinthVersionPage = getModrinthVersionPage(latest);
-                platform.debugVerbose("Modrinth version page for " + latest + ": " + modrinthVersionPage);
-                String message = "<green>A new version of Simple Voice Chat Discord Bridge is available! " +
-                        "You are currently on version <white>" + current +
-                        "<green> and the latest version is version <white>" + latest +
-                        "<green>. Go to <dark_green><click:open_url:" + modrinthVersionPage + ">" + modrinthVersionPage + "</click><green> to download the update!";
-                platform.info(message);
-                updateMessage = message + " To disable these messages, set `alert_ops_of_updates` to false in the config.";
+            if (latest != null) {
+                if (latest.isHigherThan(current)) {
+                    platform.debug("New update!");
+                    String modrinthVersionPage = getModrinthVersionPage(latest);
+                    platform.debugVerbose("Modrinth version page for " + latest + ": " + modrinthVersionPage);
+                    String message = "<green>A new version of Simple Voice Chat Discord Bridge is available! " +
+                            "You are currently on version <white>" + current +
+                            "<green> and the latest version is version <white>" + latest +
+                            "<green>. Go to <dark_green><click:open_url:" + modrinthVersionPage + ">" + modrinthVersionPage + "</click><green> to download the update!";
+                    platform.info(message);
+                    updateMessage = message + " To disable these messages, set `alert_ops_of_updates` to false in the config.";
+                }
+                return true;
+            } else {
+                return false;
             }
-            return true;
         } catch (Throwable e) {
             platform.error("Failed to check for update: " + e.getMessage());
             platform.debug(e);
