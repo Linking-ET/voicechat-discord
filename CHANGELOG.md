@@ -2,6 +2,25 @@
 
 This will mirror https://modrinth.com/plugin/simple-voice-chat-discord-bridge/changelog
 
+## 3.0.11
+
+- The supported Minecraft versions have been drastically narrowed down.
+  - We now support:
+    - 1.19.2
+    - 1.20.1
+    - 1.21.1
+    - 1.21.4
+    - 1.21.5 (newly supported)
+    - 1.21.8 (newly supported)
+  - All other Minecraft versions are not considered supported. This list is based on [Simple Voice Chat's supported versions](https://modrepo.de/minecraft/voicechat/wiki/supported_versions). Future releases will follow any changes made to that list of supported versions.
+  - Thanks to the smaller range of supported Minecraft versions, manually testing all supported versions is now feasible, and all versions have been tested on both Fabric and Paper.
+- The update checker has been simplified and improved so that it will be resilient if major changes such as releasing a separate jar for every supported Minecraft version (as opposed to the current method of releasing a single jar for all supported versions) are made in the future.
+- Log messages on Fabric are now prefixed with `[voicechat-discord]`.
+- Attempting to shut down natives that have not been loaded will no longer cause the plugin to fail to shut down.
+- The Fabric Permissions API has been upgraded to version 0.3.3 in order to fix compatibility issues with recent Minecraft versions.
+
+Code changes: https://github.com/amsam0/voicechat-discord/compare/3.0.10...3.0.11
+
 ## 3.0.10
 
 - Fix a crash that could occur when initializing the Tokio runtime with only one core
