@@ -32,7 +32,7 @@ public final class UpdateChecker {
             List<Version> tags = getTags();
             Version latest = null;
             for (Version tag : tags) {
-                if (tag.isHigherThan(latest))
+                if (latest == null || tag.isHigherThan(latest))
                     latest = tag;
             }
 
