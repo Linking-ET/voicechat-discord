@@ -60,7 +60,7 @@ tasks.shadowJar {
     archiveClassifier.set("")
     archiveVersion.set(Properties.pluginVersion)
 
-    destinationDirectory.set(project.objects.directoryProperty().fileValue(file("${buildDir}/shadow")))
+    destinationDirectory.set(project.objects.directoryProperty().fileValue(layout.buildDirectory.file("shadow").get().asFile))
 }
 
 tasks.remapJar {
