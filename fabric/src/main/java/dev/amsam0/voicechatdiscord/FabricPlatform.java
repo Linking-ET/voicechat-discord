@@ -109,10 +109,17 @@ public class FabricPlatform implements Platform {
             warn("Seems like we are trying to send a message to a sender which was not recognized (it is a " + sender.getClass().getSimpleName() + "). Please report this on GitHub issues!");
     }
 
+    private static boolean canUseSingleArgumentSendMessage = true;
+
     public void sendMessage(Player player, String message) {
-        try {
-            ((ServerPlayerEntity) player.getPlayer()).sendMessage(toNative(mm(message)));
-        } catch (Throwable ignored) {
+        if (canUseSingleArgumentSendMessage) {
+            try {
+                ((ServerPlayerEntity) player.getPlayer()).sendMessage(toNative(mm(message)));
+            } catch (Throwable ignored) {
+                canUseSingleArgumentSendMessage = false;
+            }
+        }
+        if (!canUseSingleArgumentSendMessage) {
             ((ServerPlayerEntity) player.getPlayer()).sendMessage(toNative(mm(message)), false);
         }
     }
@@ -145,6 +152,7 @@ public class FabricPlatform implements Platform {
                 } catch (Throwable ignored2) {
                 }
             }
+            // Right now, minecraft version is just used for the Modrinth versions link - returning an empty string will work fine
             return "";
         }
     }
