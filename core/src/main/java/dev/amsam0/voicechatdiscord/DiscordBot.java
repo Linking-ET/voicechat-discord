@@ -84,14 +84,14 @@ public class DiscordBot {
         return _isStarted(ptr);
     }
 
-    private native void _logIn(long ptr) throws Exception;
+    private native void _logIn(long ptr) throws Throwable;
 
     private boolean logIn() {
         try {
             _logIn(ptr);
             platform.debug("Logged into the bot with vc_id " + vcId);
             return true;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             platform.error("Failed to login to the bot with vc_id " + vcId + ": " + e);
             platform.debug(e);
             if (player != null) {
@@ -106,7 +106,7 @@ public class DiscordBot {
         }
     }
 
-    private native String _start(long ptr) throws Exception;
+    private native String _start(long ptr) throws Throwable;
 
     private void start() {
         assert player != null;
@@ -114,7 +114,7 @@ public class DiscordBot {
         String vcName;
         try {
             vcName = _start(ptr);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             platform.error("Failed to start voice connection for bot with vc_id " + vcId + ": " + e);
             platform.debug(e);
             platform.sendMessage(
@@ -202,7 +202,7 @@ public class DiscordBot {
         );
     }
 
-    private native void _stop(long ptr) throws Exception;
+    private native void _stop(long ptr) throws Throwable;
 
     public void stop() {
         // Help the threads end
@@ -259,7 +259,7 @@ public class DiscordBot {
         // Stop the rust side last so that the state is still Started for any received packets
         try {
             _stop(ptr);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             platform.warn("Failed to stop bot with vc_id " + vcId + ": " + e);
             platform.debug(e);
         }

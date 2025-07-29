@@ -39,7 +39,7 @@ public final class Core {
         try {
             LibraryLoader.load("voicechat_discord");
             initializeNatives();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             platform.error("Failed to load natives: " + e);
             throw new RuntimeException(e);
         }
@@ -58,7 +58,7 @@ public final class Core {
         try {
             shutdownNatives();
             platform.info("Successfully shutdown native runtime");
-        } catch (Exception e) {
+        } catch (Throwable e) {
             platform.error("Failed to shutdown native runtime: " + e);
             platform.debug(e);
         }
