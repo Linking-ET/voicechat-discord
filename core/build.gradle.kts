@@ -1,6 +1,6 @@
 plugins {
     java
-    id("com.modrinth.minotaur") version Properties.minotaurVersion
+    id("shared-plugins")
 }
 
 project.version = Properties.pluginVersion

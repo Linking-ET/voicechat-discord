@@ -1,9 +1,13 @@
 plugins {
     java
-    id("com.modrinth.minotaur") version Properties.minotaurVersion
-    id("com.github.johnrengelman.shadow") version Properties.shadowVersion
+    id("shared-plugins")
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.18"
 }
+
+val platformName = project.name
+
+val archivesBaseName = "${Properties.archivesBaseName}-${platformName}"
+val modrinthVersionName = "${platformName}-${Properties.pluginVersion}"
 
 project.version = Properties.pluginVersion
 project.group = Properties.mavenGroup
@@ -40,24 +44,24 @@ tasks.shadowJar {
     relocate("com.google.gson", "dev.amsam0.voicechatdiscord.shadow.gson")
     relocate("net.kyori", "dev.amsam0.voicechatdiscord.shadow.kyori")
 
-    archiveBaseName.set(Properties.archivesBaseName + "-" + project.name)
+    archiveBaseName.set(archivesBaseName)
     archiveClassifier.set("")
-    archiveVersion.set(Properties.pluginVersion + "-shadow")
+    archiveVersion.set("${Properties.pluginVersion}-shadow")
 
-    from(rootProject.file("LICENSE")) {
+    from(file("${rootDir}/LICENSE")) {
         rename { "${it}_${Properties.archivesBaseName}" }
     }
 }
 
 tasks.jar {
-    archiveBaseName.set(Properties.archivesBaseName + "-" + project.name)
+    archiveBaseName.set(archivesBaseName)
     archiveClassifier.set("")
-    archiveVersion.set(Properties.pluginVersion + "-raw")
+    archiveVersion.set("${Properties.pluginVersion}-raw")
 }
 
 tasks.reobfJar {
     // No idea why we didn't need to do this when we used Groovy, but this is necessary to have the correct jar filename (otherwise it will be paper-{VERSION}.jar)
-    outputJar.set(layout.buildDirectory.file("libs/${Properties.archivesBaseName + "-" + project.name}-${Properties.pluginVersion}.jar"))
+    outputJar.set(layout.buildDirectory.file("libs/${archivesBaseName}-${Properties.pluginVersion}.jar"))
 
     dependsOn(tasks.jar.get())
 }
@@ -98,11 +102,11 @@ repositories {
 modrinth {
     token.set(System.getenv("MODRINTH_TOKEN"))
     projectId.set(Properties.modrinthProjectId)
-    versionName.set("[PAPER] " + project.version)
-    versionNumber.set(Properties.pluginVersion)
+    versionName.set(modrinthVersionName)
+    versionNumber.set(modrinthVersionName)
     changelog.set(Changelog.get(file("$rootDir/CHANGELOG.md")))
     uploadFile.set(tasks.reobfJar.get().outputJar.get())
-    gameVersions.set(Properties.supportedMinecraftVersions)
+    gameVersions.set(Properties.paperSupportedMinecraftVersions)
     loaders.set(listOf("paper", "purpur"))
     detectLoaders.set(false)
     debugMode.set(System.getenv("MODRINTH_DEBUG") != null)

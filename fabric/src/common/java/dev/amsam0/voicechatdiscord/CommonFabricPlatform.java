@@ -10,8 +10,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.minecraft.GameVersion;
-import net.minecraft.MinecraftVersion;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.command.ServerCommandSource;
@@ -21,16 +19,13 @@ import net.minecraft.text.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.UUID;
 
 import static dev.amsam0.voicechatdiscord.Core.api;
-import static dev.amsam0.voicechatdiscord.Core.platform;
 import static dev.amsam0.voicechatdiscord.FabricMod.LOGGER;
 
-public class FabricPlatform implements Platform {
+public abstract class CommonFabricPlatform implements Platform {
     public boolean isValidPlayer(Object sender) {
         if (sender instanceof CommandContext<?> source)
             return ((ServerCommandSource) source.getSource()).getPlayer() != null;
@@ -41,37 +36,12 @@ public class FabricPlatform implements Platform {
         return api.fromServerPlayer(((ServerCommandSource) context.getSource()).getPlayer());
     }
 
-    private static boolean canUseGetEntityDirect = true;
-    private static Method ServerWorld$getEntity = null;
-
     public @Nullable Position getEntityPosition(ServerLevel level, UUID uuid) {
         ServerWorld world = (ServerWorld) level.getServerLevel();
-        Entity entity = null;
-        if (canUseGetEntityDirect) {
-            try {
-                entity = world.getEntity(uuid);
-            } catch (Throwable e) {
-                canUseGetEntityDirect = false;
-                debug("Couldn't get entity directly: " + e);
-                debug(e);
-            }
+        Entity entity = world.getEntity(uuid);
+        if (entity == null) {
+            return null;
         }
-        if (!canUseGetEntityDirect) {
-            if (ServerWorld$getEntity == null) {
-                ServerWorld$getEntity = Arrays.stream(ServerWorld.class.getMethods())
-                        .filter(method -> method.getParameterCount() == 1)
-                        .filter(method -> Arrays.equals(method.getParameterTypes(), new Class[]{UUID.class}))
-                        .filter(method -> method.getReturnType() == Entity.class)
-                        .findFirst()
-                        .get();
-            }
-            try {
-                entity = (Entity) ServerWorld$getEntity.invoke(world, uuid);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        //noinspection DataFlowIssue
         return api.createPosition(
                 entity.getX(),
                 entity.getY(),
@@ -109,19 +79,8 @@ public class FabricPlatform implements Platform {
             warn("Seems like we are trying to send a message to a sender which was not recognized (it is a " + sender.getClass().getSimpleName() + "). Please report this on GitHub issues!");
     }
 
-    private static boolean canUseSingleArgumentSendMessage = true;
-
     public void sendMessage(Player player, String message) {
-        if (canUseSingleArgumentSendMessage) {
-            try {
-                ((ServerPlayerEntity) player.getPlayer()).sendMessage(toNative(mm(message)));
-            } catch (Throwable ignored) {
-                canUseSingleArgumentSendMessage = false;
-            }
-        }
-        if (!canUseSingleArgumentSendMessage) {
-            ((ServerPlayerEntity) player.getPlayer()).sendMessage(toNative(mm(message)), false);
-        }
+        ((ServerPlayerEntity) player.getPlayer()).sendMessage(toNative(mm(message)), false);
     }
 
     public String getName(Player player) {
@@ -134,27 +93,6 @@ public class FabricPlatform implements Platform {
 
     public Loader getLoader() {
         return Loader.FABRIC;
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public String getMinecraftVersion() {
-        try {
-            return MinecraftVersion.CURRENT.name();
-        } catch (Throwable ignored) {
-            var methods = Arrays.stream(GameVersion.class.getMethods())
-                    .filter(m -> m.getParameterCount() == 0 && m.getReturnType() == String.class)
-                    .toList();
-            for (var method : methods) {
-                try {
-                    String version = (String) method.invoke(MinecraftVersion.CURRENT);
-                    if (version.contains(".")) return version;
-                } catch (Throwable ignored2) {
-                }
-            }
-            // Right now, minecraft version is just used for the Modrinth versions link - returning an empty string will work fine
-            return "";
-        }
     }
 
     private static final String logPrefix = "[" + Constants.PLUGIN_ID + "] ";

@@ -6,7 +6,7 @@ import de.maxhenkel.voicechat.api.events.*;
 
 import static dev.amsam0.voicechatdiscord.Constants.PLUGIN_ID;
 import static dev.amsam0.voicechatdiscord.Core.api;
-import static dev.amsam0.voicechatdiscord.Core.platform;
+import static dev.amsam0.voicechatdiscord.PlatformProvider.platform;
 
 public class VoicechatPlugin implements de.maxhenkel.voicechat.api.VoicechatPlugin {
     @Override

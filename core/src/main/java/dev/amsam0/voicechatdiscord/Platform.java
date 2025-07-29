@@ -83,10 +83,10 @@ public interface Platform {
         PAPER("paper"),
         FABRIC("fabric");
 
-        public final String name;
+        public final String modrinthName;
 
-        Loader(String name) {
-            this.name = name;
+        Loader(String modrinthName) {
+            this.modrinthName = modrinthName;
         }
     }
 }

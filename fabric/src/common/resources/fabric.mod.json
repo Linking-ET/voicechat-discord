@@ -20,7 +20,7 @@
           "dev.amsam0.voicechatdiscord.FabricMod"
         ],
         "voicechat": [
-          "dev.amsam0.voicechatdiscord.FabricVoicechatPlugin"
+          "dev.amsam0.voicechatdiscord.VoicechatPlugin"
         ]
     },
     "mixins": [
@@ -28,7 +28,7 @@
     "depends": {
         "fabricloader": "*",
         "fabric-api": "*",
-        "minecraft": ">=${minecraftVersion}",
+        "minecraft": "${minecraftVersion}",
         "java": ">=${javaVersion}",
         "voicechat": ">=${minecraftVersion}-${voicechatApiVersion}",
         "fabric-permissions-api-v0": "*"

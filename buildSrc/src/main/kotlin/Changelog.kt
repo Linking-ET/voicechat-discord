@@ -12,11 +12,11 @@ object Changelog {
                     break;
                 }
             } else if (foundSection) {
-                sectionContents += "$line\n"
+                sectionContents += "${line}\n"
             }
         }
         val stripped = sectionContents.trim()
-        println("Changelog:\n$stripped")
+        println("Changelog:\n${stripped}")
 
         return stripped
     }

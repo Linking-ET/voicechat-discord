@@ -17,12 +17,12 @@ import java.util.List;
 
 import static dev.amsam0.voicechatdiscord.Constants.MODRINTH_PROJECT_ID;
 import static dev.amsam0.voicechatdiscord.Constants.VERSION;
-import static dev.amsam0.voicechatdiscord.Core.platform;
+import static dev.amsam0.voicechatdiscord.PlatformProvider.platform;
 
 public final class UpdateChecker {
     public static @Nullable String updateMessage = null;
 
-    private static final String modrinthVersionPage = "https://modrinth.com/plugin/" + MODRINTH_PROJECT_ID + "/versions?g=" + platform.getMinecraftVersion() + "&l=" + platform.getLoader().name;
+    private static final String modrinthVersionPage = "https://modrinth.com/plugin/" + MODRINTH_PROJECT_ID + "/versions?g=" + platform.getMinecraftVersion() + "&l=" + platform.getLoader().modrinthName;
 
     /**
      * Returns true if successful, false if not successful

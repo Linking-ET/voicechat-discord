@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import static dev.amsam0.voicechatdiscord.Constants.CONFIG_HEADER;
 import static dev.amsam0.voicechatdiscord.Constants.VOICECHAT_MIN_VERSION;
+import static dev.amsam0.voicechatdiscord.PlatformProvider.platform;
 
 /**
  * Core code between Paper and Fabric.
@@ -23,7 +24,6 @@ import static dev.amsam0.voicechatdiscord.Constants.VOICECHAT_MIN_VERSION;
 public final class Core {
     public static ArrayList<DiscordBot> bots = new ArrayList<>();
     public static VoicechatServerApi api;
-    public static Platform platform;
     public static int debugLevel = 0;
     public static boolean alertOpsOfUpdates = true;
 

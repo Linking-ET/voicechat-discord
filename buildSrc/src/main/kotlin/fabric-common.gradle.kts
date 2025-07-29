@@ -1,12 +1,29 @@
 plugins {
     java
-    id("com.modrinth.minotaur") version Properties.minotaurVersion
-    id("com.github.johnrengelman.shadow") version Properties.shadowVersion
-    id("fabric-loom") version "1.11-SNAPSHOT" // https://fabricmc.net/develop
+    id("com.modrinth.minotaur")
+    id("com.github.johnrengelman.shadow")
+    id("fabric-loom")
 }
 
-project.version = Properties.pluginVersion
+val parent = project.parent!!
+val platformName = parent.name
+val minecraftVersion = project.name
+val fabricMetadata = Properties.fabricVersions[minecraftVersion]!!
+
+val archivesBaseName = "${Properties.archivesBaseName}-${platformName}"
+val projectVersion = "${minecraftVersion}-${Properties.pluginVersion}"
+val modrinthVersionName = "${platformName}-${projectVersion}"
+
+project.version = projectVersion
 project.group = Properties.mavenGroup
+
+sourceSets {
+    main {
+        // Include common fabric code
+        java.srcDirs(layout.projectDirectory.file("src/common/java"))
+        resources.srcDirs(layout.projectDirectory.file("src/common/resources"))
+    }
+}
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(Properties.javaVersion))
@@ -29,9 +46,8 @@ tasks.processResources {
     filteringCharset = Charsets.UTF_8.name()
 
     val properties = mapOf(
-        "version" to Properties.pluginVersion,
-        "fabricLoaderVersion" to Properties.fabricLoaderVersion,
-        "minecraftVersion" to Properties.minecraftRequiredVersion,
+        "version" to projectVersion,
+        "minecraftVersion" to minecraftVersion,
         "voicechatApiVersion" to Properties.voicechatApiVersion,
         "javaVersion" to Properties.javaVersion.toString(),
     )
@@ -39,12 +55,6 @@ tasks.processResources {
 
     filesMatching("fabric.mod.json") {
         expand(properties)
-    }
-}
-
-tasks.jar {
-    from("LICENSE") {
-        rename { "${it}_${Properties.archivesBaseName}" }
     }
 }
 
@@ -56,33 +66,40 @@ tasks.shadowJar {
     relocate("com.google.gson", "dev.amsam0.voicechatdiscord.shadow.gson")
     relocate("net.kyori", "dev.amsam0.voicechatdiscord.shadow.kyori")
 
-    archiveBaseName.set(Properties.archivesBaseName + "-" + project.name)
+    archiveBaseName.set(archivesBaseName)
     archiveClassifier.set("")
-    archiveVersion.set(Properties.pluginVersion)
+    archiveVersion.set(projectVersion)
 
     destinationDirectory.set(project.objects.directoryProperty().fileValue(layout.buildDirectory.file("shadow").get().asFile))
 
-    from(rootProject.file("LICENSE")) {
+    from(file("${rootDir}/LICENSE")) {
         rename { "${it}_${Properties.archivesBaseName}" }
     }
 }
 
 tasks.remapJar {
-    archiveBaseName.set(Properties.archivesBaseName + "-" + project.name)
+    archiveBaseName.set(archivesBaseName)
     archiveClassifier.set("")
-    archiveVersion.set(Properties.pluginVersion)
+    archiveVersion.set(projectVersion)
 
     inputFile.set(tasks.shadowJar.get().archiveFile)
 }
 
 dependencies {
-    minecraft("com.mojang:minecraft:${Properties.minecraftBuildVersion}")
-    mappings("net.fabricmc:yarn:${Properties.yarnMappingsDevVersion}:v2")
+    minecraft("com.mojang:minecraft:${minecraftVersion}")
+    mappings("net.fabricmc:yarn:${fabricMetadata.yarnMappingsVersion}:v2")
     modImplementation("net.fabricmc:fabric-loader:${Properties.fabricLoaderVersion}")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${Properties.fabricApiDevVersion}")
+    setOf(
+        "fabric-api-base",
+        "fabric-command-api-v2",
+        "fabric-lifecycle-events-v1",
+        "fabric-networking-api-v1"
+    ).forEach {
+        modImplementation(fabricApi.module(it, fabricMetadata.fabricApiVersion))
+    }
 
-    modImplementation("me.lucko:fabric-permissions-api:0.3.3")
-    include("me.lucko:fabric-permissions-api:0.3.3")
+    modImplementation("me.lucko:fabric-permissions-api:${fabricMetadata.permissionsApiVersion}")
+    include("me.lucko:fabric-permissions-api:${fabricMetadata.permissionsApiVersion}")
 
     compileOnly("de.maxhenkel.voicechat:voicechat-api:${Properties.voicechatApiVersion}")
 
@@ -126,11 +143,11 @@ repositories {
 modrinth {
     token.set(System.getenv("MODRINTH_TOKEN"))
     projectId.set(Properties.modrinthProjectId)
-    versionName.set("[FABRIC] " + project.version)
-    versionNumber.set(Properties.pluginVersion)
-    changelog.set("<a href=\"https://modrinth.com/mod/fabric-api\"><img alt=\"Requires Fabric API\" height=\"56\" src=\"https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/requires/fabric-api_vector.svg\" /></a>\n\n${Changelog.get(file("$rootDir/CHANGELOG.md"))}")
+    versionName.set(modrinthVersionName)
+    versionNumber.set(modrinthVersionName)
+    changelog.set("<a href=\"https://modrinth.com/mod/fabric-api\"><img alt=\"Requires Fabric API\" height=\"56\" src=\"https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/requires/fabric-api_vector.svg\" /></a>\n\n${Changelog.get(file("${rootDir}/CHANGELOG.md"))}")
     uploadFile.set(tasks.remapJar)
-    gameVersions.set(Properties.supportedMinecraftVersions)
+    gameVersions.set(listOf(minecraftVersion))
     debugMode.set(System.getenv("MODRINTH_DEBUG") != null)
     dependencies {
         required.project("simple-voice-chat")

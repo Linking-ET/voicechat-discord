@@ -18,6 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import static dev.amsam0.voicechatdiscord.Constants.PLUGIN_ID;
 import static dev.amsam0.voicechatdiscord.Core.*;
+import static dev.amsam0.voicechatdiscord.PlatformProvider.platform;
 
 public final class PaperPlugin extends JavaPlugin implements Listener {
     public static final Logger LOGGER = LogManager.getLogger(PLUGIN_ID);
@@ -33,7 +34,6 @@ public final class PaperPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         INSTANCE = this;
-        platform = new PaperPlatform();
         adventure = BukkitAudiences.create(this);
 
         try {

@@ -18,7 +18,7 @@ import org.bukkit.event.Listener;
 import java.lang.reflect.InvocationTargetException;
 
 import static dev.amsam0.voicechatdiscord.BukkitHelper.getCraftServer;
-import static dev.amsam0.voicechatdiscord.Core.platform;
+import static dev.amsam0.voicechatdiscord.PlatformProvider.platform;
 
 @SuppressWarnings("removal") // new brigadier APIs didn't exist in 1.19.4
 public class Pre_1_20_6_CommandHelper implements CommandHelper, Listener {
