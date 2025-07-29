@@ -61,6 +61,10 @@ tasks.shadowJar {
     archiveVersion.set(Properties.pluginVersion)
 
     destinationDirectory.set(project.objects.directoryProperty().fileValue(layout.buildDirectory.file("shadow").get().asFile))
+
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}_${Properties.archivesBaseName}" }
+    }
 }
 
 tasks.remapJar {

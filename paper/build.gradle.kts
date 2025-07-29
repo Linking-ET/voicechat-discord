@@ -43,6 +43,10 @@ tasks.shadowJar {
     archiveBaseName.set(Properties.archivesBaseName + "-" + project.name)
     archiveClassifier.set("")
     archiveVersion.set(Properties.pluginVersion + "-shadow")
+
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}_${Properties.archivesBaseName}" }
+    }
 }
 
 tasks.jar {
