@@ -104,11 +104,6 @@ public final class PaperPlugin extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void playerJoin(PlayerJoinEvent e) {
-        onPlayerJoin(e.getPlayer());
-    }
-
-    @EventHandler
     public void playerLeave(PlayerQuitEvent e) {
         onPlayerLeave(e.getPlayer().getUniqueId());
     }

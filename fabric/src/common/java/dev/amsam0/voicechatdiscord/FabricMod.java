@@ -20,8 +20,6 @@ public class FabricMod implements DedicatedServerModInitializer {
 
         CommandRegistrationCallback.EVENT.register(((dispatcher, registryAccess, environment) -> dispatcher.register(SubCommands.build(literal("dvc")))));
 
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> onPlayerJoin(handler.player));
-
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> onPlayerLeave(handler.player.getUuid()));
 
         ServerLifecycleEvents.SERVER_STOPPED.register((server -> disable()));

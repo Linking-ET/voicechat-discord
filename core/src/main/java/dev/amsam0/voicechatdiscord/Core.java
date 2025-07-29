@@ -25,7 +25,6 @@ public final class Core {
     public static ArrayList<DiscordBot> bots = new ArrayList<>();
     public static VoicechatServerApi api;
     public static int debugLevel = 0;
-    public static boolean alertOpsOfUpdates = true;
 
     private static native void initializeNatives();
 
@@ -45,7 +44,6 @@ public final class Core {
             throw new RuntimeException(e);
         }
 
-        new Thread(UpdateChecker::checkForUpdate, "voicechat-discord: Update Checker").start();
         loadConfig();
     }
 
@@ -127,14 +125,6 @@ public final class Core {
         platform.info("Using " + bots.size() + " bot" + (bots.size() != 1 ? "s" : ""));
 
         try {
-            alertOpsOfUpdates = (boolean) config.get("alert_ops_of_updates");
-            if (!alertOpsOfUpdates)
-                platform.info("Operators will not be alerted of new updates. Please make sure you check the console for new updates!");
-        } catch (ClassCastException e) {
-            platform.error("Please make sure the alert_ops_of_updates option is a valid boolean (true or false)");
-        }
-
-        try {
             debugLevel = (int) config.get("debug_level");
             if (debugLevel > 0) platform.info("Debug level has been set to " + debugLevel);
             setDebugLevel(debugLevel);
@@ -154,17 +144,6 @@ public final class Core {
             discordBot.free();
         });
         bots.clear();
-    }
-
-    public static void onPlayerJoin(Object rawPlayer) {
-        if (UpdateChecker.updateMessage != null && platform.isOperator(rawPlayer)) {
-            if (alertOpsOfUpdates) {
-                platform.sendMessage(api.fromServerPlayer(rawPlayer), UpdateChecker.updateMessage);
-                platform.debug("Alerted operator of new update");
-            } else {
-                platform.debug("Not alerting operator of new update");
-            }
-        }
     }
 
     public static void onPlayerLeave(UUID playerUuid) {

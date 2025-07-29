@@ -171,13 +171,6 @@ Allows you to whisper.
 If you are a operator (specifically permission level 2 or higher on fabric) or if you have the `voicechat-discord.reload-config` permission, you can use the `/dvc reloadconfig` subcommand to reload
 the config without have to reload/restart the server. **Using this subcommand will stop all running bots.**
 
-### `/dvc checkforupdate`
-
-Checks for an update to the addon by first contacting GitHub's API, and then if a new version is found, using Modrinth's API to provide a link to that version's download page.
-
-This is done automatically on server startup. By default, the update message (if there is an update) is sent to operators when they join the server. This can be disabled by disabling the
-`alert_ops_of_updates` option in [the configuration file](#finding-the-configuration-file). However, this will not disable logging update messages to the console on startup.
-
 ## Roadmap
 
 ### Future

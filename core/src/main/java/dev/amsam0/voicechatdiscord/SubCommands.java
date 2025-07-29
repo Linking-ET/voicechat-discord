@@ -35,7 +35,6 @@ public final class SubCommands {
                 .then(literal("start").executes(wrapInTry(SubCommands::start)))
                 .then(literal("stop").executes(wrapInTry(SubCommands::stop)))
                 .then(literal("reloadconfig").executes(wrapInTry(SubCommands::reloadConfig)))
-                .then(literal("checkforupdate").executes(wrapInTry(SubCommands::checkForUpdate)))
                 .then(literal("togglewhisper").executes(wrapInTry(SubCommands::toggleWhisper)))
                 .then(literal("group").executes(GroupCommands::help)
                         .then(literal("list").executes(wrapInTry(GroupCommands::list)))
@@ -180,25 +179,6 @@ public final class SubCommands {
                     "<green>Successfully reloaded config! Using " + bots.size() + " bot" + (bots.size() != 1 ? "s" : "") + "."
             );
         }, "voicechat-discord: Reload Config").start();
-    }
-
-    private static void checkForUpdate(CommandContext<?> sender) {
-        if (!platform.isOperator(sender)) {
-            platform.sendMessage(
-                    sender,
-                    "<red>You must be an operator to use this command!"
-            );
-            return;
-        }
-
-        platform.sendMessage(sender, "<yellow>Checking for update...");
-
-        new Thread(() -> {
-            if (UpdateChecker.checkForUpdate())
-                platform.sendMessage(sender, Objects.requireNonNullElse(UpdateChecker.updateMessage, "<red>No update found."));
-            else
-                platform.sendMessage(sender, "<red>An error occurred when checking for updates. Check the console for the error message.");
-        }, "voicechat-discord: Check for Update").start();
     }
 
     private static void toggleWhisper(CommandContext<?> sender) {
