@@ -5,9 +5,6 @@ import de.maxhenkel.voicechat.api.Player;
 import de.maxhenkel.voicechat.api.Position;
 import de.maxhenkel.voicechat.api.ServerLevel;
 import de.maxhenkel.voicechat.api.ServerPlayer;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.ansi.ANSIComponentSerializer;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -69,14 +66,6 @@ public interface Platform {
     private void debug(String message, int levelToLog) {
         // debugs are used so frequently and without color that there's no point in using minimessage
         if (debugLevel >= levelToLog) infoRaw("[DEBUG " + levelToLog + "] " + message);
-    }
-
-    default Component mm(String message) {
-        return MiniMessage.miniMessage().deserialize(message);
-    }
-
-    default String ansi(Component component) {
-        return ANSIComponentSerializer.ansi().serialize(component);
     }
 
     enum Loader {

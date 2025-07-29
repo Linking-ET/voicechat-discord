@@ -6,16 +6,11 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.mojang.brigadier.builder.LiteralArgumentBuilder.literal;
-import static dev.amsam0.voicechatdiscord.Constants.PLUGIN_ID;
 import static dev.amsam0.voicechatdiscord.Core.*;
 
 public class FabricMod implements DedicatedServerModInitializer {
-    public static final Logger LOGGER = LoggerFactory.getLogger(PLUGIN_ID);
-
     @Override
     public void onInitializeServer() {
         enable();

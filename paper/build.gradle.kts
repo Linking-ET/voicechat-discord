@@ -85,8 +85,8 @@ dependencies {
     // We need to be able to use the latest version of adventure (4.14.0), but Paper 1.19.4 uses 4.13.1
     // So we are forced to use the legacy platform implementation
     shadow("net.kyori:adventure-platform-bukkit:4.3.0")
-    shadow("net.kyori:adventure-text-minimessage:${Properties.adventureVersion}")
-    shadow("net.kyori:adventure-text-serializer-ansi:${Properties.adventureVersion}")
+    shadow("net.kyori:adventure-text-minimessage:${Properties.paperAdventureVersion}")
+    shadow("net.kyori:adventure-text-serializer-ansi:${Properties.paperAdventureVersion}")
     shadow(project(":core"))
 }
 

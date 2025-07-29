@@ -89,17 +89,20 @@ dependencies {
     minecraft("com.mojang:minecraft:${minecraftVersion}")
     mappings("net.fabricmc:yarn:${fabricMetadata.yarnMappingsVersion}:v2")
     modImplementation("net.fabricmc:fabric-loader:${Properties.fabricLoaderVersion}")
-    setOf(
-        "fabric-api-base",
-        "fabric-command-api-v2",
-        "fabric-lifecycle-events-v1",
-        "fabric-networking-api-v1"
-    ).forEach {
-        modImplementation(fabricApi.module(it, fabricMetadata.fabricApiVersion))
-    }
+    // For running a server, we need the whole API
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${fabricMetadata.fabricApiVersion}")
+//    setOf(
+//        "fabric-api-base",
+//        "fabric-command-api-v2",
+//        "fabric-lifecycle-events-v1",
+//        "fabric-networking-api-v1"
+//    ).forEach {
+//        modImplementation(fabricApi.module(it, fabricMetadata.fabricApiVersion))
+//    }
 
-    modImplementation("me.lucko:fabric-permissions-api:${fabricMetadata.permissionsApiVersion}")
-    include("me.lucko:fabric-permissions-api:${fabricMetadata.permissionsApiVersion}")
+    // This includes fabric-api - things will break because it has a newer version than what we use
+    modImplementation("me.lucko:fabric-permissions-api:${fabricMetadata.permissionsApiVersion}") { exclude(group = "net.fabricmc.fabric-api") }
+    include("me.lucko:fabric-permissions-api:${fabricMetadata.permissionsApiVersion}") { exclude(group = "net.fabricmc.fabric-api") }
 
     compileOnly("de.maxhenkel.voicechat:voicechat-api:${Properties.voicechatApiVersion}")
 
@@ -112,17 +115,28 @@ dependencies {
     implementation("com.google.code.gson:gson:${Properties.gsonVersion}")
     shadow("com.google.code.gson:gson:${Properties.gsonVersion}")
 
-    implementation("net.kyori:adventure-api:${Properties.adventureVersion}")
-    implementation("net.kyori:adventure-text-minimessage:${Properties.adventureVersion}")
-    implementation("net.kyori:adventure-text-serializer-ansi:${Properties.adventureVersion}")
-    implementation("net.kyori:adventure-text-serializer-legacy:${Properties.adventureVersion}") // Fabric only
-    shadow("net.kyori:adventure-api:${Properties.adventureVersion}")
-    shadow("net.kyori:adventure-text-minimessage:${Properties.adventureVersion}")
-    shadow("net.kyori:adventure-text-serializer-ansi:${Properties.adventureVersion}")
-    shadow("net.kyori:adventure-text-serializer-legacy:${Properties.adventureVersion}") // Fabric only
+    implementation("net.kyori:adventure-api:${fabricMetadata.adventureVersion}")
+    shadow("net.kyori:adventure-api:${fabricMetadata.adventureVersion}")
+
+    implementation("net.kyori:adventure-text-minimessage:${fabricMetadata.adventureVersion}")
+    shadow("net.kyori:adventure-text-minimessage:${fabricMetadata.adventureVersion}")
+
+    modImplementation("net.kyori:adventure-platform-fabric:${fabricMetadata.adventurePlatformFabricVersion}")
+    include("net.kyori:adventure-platform-fabric:${fabricMetadata.adventurePlatformFabricVersion}")
+
+    if (!minecraftVersion.startsWith("1.19")) {
+        implementation("net.kyori:adventure-text-serializer-ansi:${fabricMetadata.adventureVersion}")
+        shadow("net.kyori:adventure-text-serializer-ansi:${fabricMetadata.adventureVersion}")
+    } else {
+        implementation("net.kyori:adventure-text-serializer-plain:${fabricMetadata.adventureVersion}")
+        shadow("net.kyori:adventure-text-serializer-plain:${fabricMetadata.adventureVersion}")
+    }
 
     implementation(project(":core"))
     shadow(project(":core"))
+
+    // Runtime dependencies for testing only
+    modRuntimeOnly("maven.modrinth:simple-voice-chat:fabric-${minecraftVersion}-2.5.35")
 }
 
 repositories {

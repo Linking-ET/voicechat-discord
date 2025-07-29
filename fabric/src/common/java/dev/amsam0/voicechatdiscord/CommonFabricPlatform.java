@@ -7,25 +7,24 @@ import de.maxhenkel.voicechat.api.ServerLevel;
 import de.maxhenkel.voicechat.api.ServerPlayer;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.format.TextDecoration;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.*;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.UUID;
 
+import static dev.amsam0.voicechatdiscord.Constants.PLUGIN_ID;
 import static dev.amsam0.voicechatdiscord.Core.api;
-import static dev.amsam0.voicechatdiscord.FabricMod.LOGGER;
 
 public abstract class CommonFabricPlatform implements Platform {
+    public static final Logger LOGGER = LoggerFactory.getLogger(PLUGIN_ID);
+
     public boolean isValidPlayer(Object sender) {
         if (sender instanceof CommandContext<?> source)
             return ((ServerCommandSource) source.getSource()).getPlayer() != null;
@@ -71,16 +70,16 @@ public abstract class CommonFabricPlatform implements Platform {
 
     public void sendMessage(Object sender, String message) {
         if (sender instanceof ServerPlayerEntity player)
-            player.sendMessage(toNative(mm(message)));
+            player.sendMessage(mm(message));
         else if (sender instanceof CommandContext<?> context) {
             ServerCommandSource source = (ServerCommandSource) context.getSource();
-            source.sendMessage(toNative(mm(message)));
+            source.sendMessage(mm(message));
         } else
             warn("Seems like we are trying to send a message to a sender which was not recognized (it is a " + sender.getClass().getSimpleName() + "). Please report this on GitHub issues!");
     }
 
     public void sendMessage(Player player, String message) {
-        ((ServerPlayerEntity) player.getPlayer()).sendMessage(toNative(mm(message)), false);
+        ((ServerPlayerEntity) player.getPlayer()).sendMessage(mm(message));
     }
 
     public String getName(Player player) {
@@ -95,11 +94,7 @@ public abstract class CommonFabricPlatform implements Platform {
         return Loader.FABRIC;
     }
 
-    private static final String logPrefix = "[" + Constants.PLUGIN_ID + "] ";
-
-    public void info(String message) {
-        LOGGER.info(logPrefix + "{}", ansi(mm(message)));
-    }
+    protected static final String logPrefix = "[" + Constants.PLUGIN_ID + "] ";
 
     public void infoRaw(String message) {
         LOGGER.info(logPrefix + "{}", message);
@@ -115,145 +110,7 @@ public abstract class CommonFabricPlatform implements Platform {
         LOGGER.error(logPrefix + "{}", message);
     }
 
-    private static boolean canConstructClickEvent = true;
-    private static Method FabricPlatformClickEventHelper$toNative = null;
-
-    private Text toNative(Component component) {
-        try {
-            MutableText text;
-            if (component instanceof TextComponent textComponent) {
-                text = Text.literal(textComponent.content());
-//                TextContent content;
-//                try {
-//                    // This should work in >=1.20.3
-//                    content = PlainTextContent.of(textComponent.content());
-//                    debug("used PlainTextContent");
-//                } catch (NoClassDefFoundError ignored) {
-//                    // In <=1.20.2, we can try to use reflection
-//                    try {
-//                        // Try to get the LiteralTextContent class and use its constructor
-//                        content = (TextContent) Class
-//                                .forName("net.minecraft.class_2585")
-//                                .getDeclaredConstructor(String.class)
-//                                .newInstance(textComponent.content());
-//                        debug("used LiteralTextContent");
-//                    } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
-//                             IllegalAccessException | InvocationTargetException ignored2) {
-//                        // If we can't use the official classes, try using our potentially broken TextContent implementation
-//                        content = new Literal(textComponent.content());
-//                        debug("used scuffed TextContent implementation");
-//                    }
-//                }
-//                text = MutableText.of(content);
-            } else {
-                warn("Unimplemented component type: " + component.getClass().getName());
-                return Text.of(LegacyComponentSerializer.legacySection().serialize(component));
-            }
-
-            Style style = Style.EMPTY;
-
-            var font = component.font();
-            if (font != null) {
-                warn("Fonts are not implemented");
-            }
-
-            var color = component.color();
-            if (color != null)
-                style = style.withColor(TextColor.fromRgb(Integer.parseInt(color.asHexString().substring(1), 16)));
-
-            for (var entry : component.decorations().entrySet()) {
-                var decoration = entry.getKey();
-                var state = entry.getValue();
-
-                if (state != TextDecoration.State.TRUE)
-                    continue;
-
-                switch (decoration) {
-                    case OBFUSCATED -> style = style.withObfuscated(true);
-                    case BOLD -> style = style.withBold(true);
-                    case STRIKETHROUGH -> style = style.withStrikethrough(true);
-                    case UNDERLINED -> style = style.withUnderline(true);
-                    case ITALIC -> style = style.withItalic(true);
-                    default -> warn("Unknown decoration: " + decoration);
-                }
-            }
-
-            var clickEvent = component.clickEvent();
-            if (clickEvent != null) {
-                if (canConstructClickEvent) {
-                    try {
-                        Constructor<ClickEvent> constructor = ClickEvent.class.getConstructor(ClickEvent.Action.class, String.class);
-                        ClickEvent.Action action = null;
-                        switch (clickEvent.action()) {
-                            case OPEN_URL -> action = ClickEvent.Action.OPEN_URL;
-                            case OPEN_FILE -> action = ClickEvent.Action.OPEN_FILE;
-                            case RUN_COMMAND -> action = ClickEvent.Action.RUN_COMMAND;
-                            case SUGGEST_COMMAND -> action = ClickEvent.Action.SUGGEST_COMMAND;
-                            case CHANGE_PAGE -> action = ClickEvent.Action.CHANGE_PAGE;
-                            case COPY_TO_CLIPBOARD -> action = ClickEvent.Action.COPY_TO_CLIPBOARD;
-                            default -> warn("Unknown click event action: " + clickEvent.action());
-                        }
-                        style = style.withClickEvent(constructor.newInstance(action, clickEvent.value()));
-                    } catch (Throwable e) {
-                        canConstructClickEvent = false;
-                        debug("Constructing click event failed: " + e);
-                        debug(e);
-                    }
-                }
-                if (!canConstructClickEvent) {
-                    if (FabricPlatformClickEventHelper$toNative == null) {
-                        FabricPlatformClickEventHelper$toNative = Class.forName("dev.amsam0.voicechatdiscord.FabricPlatformClickEventHelper").getMethods()[0];
-                    }
-                    // We can't use action classes such as ClickEvent.OpenUrl in this method directly because those classes will try to load
-                    // on earlier minecraft versions (where they don't exist yet). By using them in a separate class, we avoid
-                    // loading that class (and thus the action classes) unless we need them
-                    style = style.withClickEvent((ClickEvent) FabricPlatformClickEventHelper$toNative.invoke(null, clickEvent));
-                }
-            }
-
-            var hoverEvent = component.hoverEvent();
-            if (hoverEvent != null) {
-                warn("Hover events are not implemented");
-            }
-
-            var insertion = component.insertion();
-            if (insertion != null) {
-                warn("Insertions are not implemented");
-            }
-
-            text.setStyle(style);
-            for (var child : component.children()) {
-                text.append(toNative(child));
-            }
-
-            return text;
-        } catch (Throwable e) {
-            warn("Error when converting component to native: " + e);
-            debug(e);
-            return Text.of(LegacyComponentSerializer.legacySection().serialize(component));
-        }
+    protected Component mm(String message) {
+        return MiniMessage.miniMessage().deserialize(message);
     }
-
-//    private record Literal(String string) implements TextContent {
-//        public <T> Optional<T> visit(StringVisitable.Visitor<T> visitor) {
-//            return visitor.accept(this.string);
-//        }
-//
-//        @Override
-//        public Type<?> getType() {
-//            try {
-//                return PlainTextContent.TYPE;
-//            } catch (NoClassDefFoundError ignored) {
-//                return KeybindTextContent.TYPE;
-//            }
-//        }
-//
-//        public <T> Optional<T> visit(StringVisitable.StyledVisitor<T> visitor, Style style) {
-//            return visitor.accept(style, this.string);
-//        }
-//
-//        public String toString() {
-//            return "literal{" + this.string + "}";
-//        }
-//    }
 }
