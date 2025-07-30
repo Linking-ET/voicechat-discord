@@ -74,8 +74,9 @@ public final class DiscordBot {
 
     public void logInAndStart(ServerPlayer player) {
         this.player = player;
-        if (logIn())
+        if (logIn()) {
             start();
+        }
     }
 
     private native boolean _isStarted(long ptr);
@@ -108,156 +109,203 @@ public final class DiscordBot {
     private native String _start(long ptr) throws Throwable;
 
     private void start() {
-        assert player != null;
-
-        String vcName;
         try {
-            vcName = _start(ptr);
+            // Note that player could become null later, if the player leaves - that's why we wrap the whole thing in a try-catch
+            assert player != null;
+
+            String vcName = _start(ptr);
+
+            var connection = api.getConnectionOf(player);
+            assert connection != null; // connection should only be null if the player is not connected to the server
+
+            listener = api.playerAudioListenerBuilder()
+                    .setPacketListener(this::handlePacket)
+                    .setPlayer(player.getUuid())
+                    .build();
+            api.registerAudioListener(listener);
+
+            sender = api.createAudioSender(connection);
+            if (!api.registerAudioSender(sender)) {
+                platform.error("Couldn't register audio sender. The player has the mod installed.");
+                // Try-catch just in case sendMessage fails
+                try {
+                    if (player != null) {
+                        platform.sendMessage(
+                                player,
+                                Component.red("It seems that you have Simple Voice Chat installed on your client. To use the addon, you must not have Simple Voice Chat installed on your client.")
+                        );
+                    }
+                } catch (Throwable e) {
+                    platform.error("Couldn't send error message to player", e);
+                }
+                // Needs to run after sending the message because it will set player to null
+                stop();
+                return;
+            }
+
+            connectionNumber++;
+
+            resetThread = new Thread(() -> {
+                var startConnectionNumber = connectionNumber;
+                platform.debug("reset thread " + startConnectionNumber + " starting");
+                while (true) {
+                    try {
+                        //noinspection BusyWait
+                        Thread.sleep(500);
+                    } catch (InterruptedException ignored) {
+                        platform.debug("reset thread " + startConnectionNumber + " interrupted");
+                        break;
+                    }
+
+                    // Check after sleeping instead of before sleeping
+                    if (sender == null || connectionNumber != startConnectionNumber) break;
+
+                    if (lastTimeAudioProvidedToSVC != null && System.currentTimeMillis() - MILLISECONDS_UNTIL_RESET > lastTimeAudioProvidedToSVC) {
+                        platform.debugVerbose("resetting sender for player with UUID " + player.getUuid());
+                        sender.reset();
+                        lastTimeAudioProvidedToSVC = null;
+                    }
+
+                    _resetSenders(ptr);
+                }
+                platform.debug("reset thread " + startConnectionNumber + " ending");
+            }, "voicechat-discord: Reset Thread #" + connectionNumber);
+            resetThread.start();
+
+            senderThread = new Thread(() -> {
+                var startConnectionNumber = connectionNumber;
+                platform.debug("sender thread " + startConnectionNumber + " starting");
+                while (true) {
+                    var data = _blockForSpeakingBufferOpusData(ptr);
+
+                    // Check after blocking instead of before blocking
+                    if (sender == null || connectionNumber != startConnectionNumber) break;
+
+                    if (data.length > 0) {
+                        sender.send(data);
+                        // make sure this is after _blockForSpeakingBufferOpusData - we don't want the time before blocking
+                        lastTimeAudioProvidedToSVC = System.currentTimeMillis();
+                    }
+                }
+                platform.debug("sender thread " + startConnectionNumber + " ending");
+            }, "voicechat-discord: Sender Thread #" + connectionNumber);
+            senderThread.start();
+
+            connection.setConnected(true);
+
+            platform.info("Started voice chat for " + platform.getName(player) + " in channel " + vcName + " with bot with vc_id " + vcId);
+            platform.sendMessage(
+                    player,
+                    Component.green("Started a voice chat! To stop it, use "),
+                    Component.white("/dvc stop"),
+                    Component.green(". If you are having issues, try restarting the session with "),
+                    Component.white("/dvc start"),
+                    Component.green(". Please join the following voice channel in discord: "),
+                    Component.white(vcName)
+            );
         } catch (Throwable e) {
             platform.error("Failed to start voice connection for bot with vc_id " + vcId, e);
-            platform.sendMessage(
-                    player,
-                    Component.red("Failed to start voice connection. Please contact your server owner since they will be able to see the error message.")
-            );
-            stop();
-            return;
-        }
-
-        var connection = api.getConnectionOf(player);
-        assert connection != null; // connection should only be null if the player is not connected to the server
-
-        listener = api.playerAudioListenerBuilder()
-                .setPacketListener(this::handlePacket)
-                .setPlayer(player.getUuid())
-                .build();
-        api.registerAudioListener(listener);
-
-        sender = api.createAudioSender(connection);
-        if (!api.registerAudioSender(sender)) {
-            platform.error("Couldn't register audio sender. The player has the mod installed.");
-            platform.sendMessage(
-                    player,
-                    Component.red("It seems that you have Simple Voice Chat installed on your client. To use the addon, you must not have Simple Voice Chat installed on your client.")
-            );
-            stop();
-            return;
-        }
-
-        connectionNumber++;
-
-        resetThread = new Thread(() -> {
-            var startConnectionNumber = connectionNumber;
-            platform.debug("reset thread " + startConnectionNumber + " starting");
-            while (true) {
-                try {
-                    //noinspection BusyWait
-                    Thread.sleep(500);
-                } catch (InterruptedException ignored) {
-                    platform.debug("reset thread " + startConnectionNumber + " interrupted");
-                    break;
+            // Try-catch just in case sendMessage fails
+            try {
+                if (player != null) {
+                    platform.sendMessage(
+                            player,
+                            Component.red("Failed to start voice connection. Please contact your server owner since they will be able to see the error message.")
+                    );
                 }
-
-                // Check after sleeping instead of before sleeping
-                if (sender == null || connectionNumber != startConnectionNumber) break;
-
-                if (lastTimeAudioProvidedToSVC != null && System.currentTimeMillis() - MILLISECONDS_UNTIL_RESET > lastTimeAudioProvidedToSVC) {
-                    platform.debugVerbose("resetting sender for player with UUID " + player.getUuid());
-                    sender.reset();
-                    lastTimeAudioProvidedToSVC = null;
-                }
-
-                _resetSenders(ptr);
+            } catch (Throwable e2) {
+                platform.error("Couldn't send error message to player", e2);
             }
-            platform.debug("reset thread " + startConnectionNumber + " ending");
-        }, "voicechat-discord: Reset Thread #" + connectionNumber);
-        resetThread.start();
-
-        senderThread = new Thread(() -> {
-            var startConnectionNumber = connectionNumber;
-            platform.debug("sender thread " + startConnectionNumber + " starting");
-            while (true) {
-                var data = _blockForSpeakingBufferOpusData(ptr);
-
-                // Check after blocking instead of before blocking
-                if (sender == null || connectionNumber != startConnectionNumber) break;
-
-                if (data.length > 0) {
-                    sender.send(data);
-                    // make sure this is after _blockForSpeakingBufferOpusData - we don't want the time before blocking
-                    lastTimeAudioProvidedToSVC = System.currentTimeMillis();
-                }
-            }
-            platform.debug("sender thread " + startConnectionNumber + " ending");
-        }, "voicechat-discord: Sender Thread #" + connectionNumber);
-        senderThread.start();
-
-        connection.setConnected(true);
-
-        platform.info("Started voice chat for " + platform.getName(player) + " in channel " + vcName + " with bot with vc_id " + vcId);
-        platform.sendMessage(
-                player,
-                Component.green("Started a voice chat! To stop it, use "),
-                Component.white("/dvc stop"),
-                Component.green(". If you are having issues, try restarting the session with "),
-                Component.white("/dvc start"),
-                Component.green(". Please join the following voice channel in discord: "),
-                Component.white(vcName)
-        );
+            // Needs to run after sending the message because it will set player to null
+            stop();
+        }
     }
 
     private native void _stop(long ptr) throws Throwable;
 
     public void stop() {
+        // This method is very conservative about failing - we want to always return to a decent state even if things don't work out
+
         // Help the threads end
         connectionNumber++;
 
-        if (listener != null) {
-            api.unregisterAudioListener(listener);
-            listener = null;
+        try {
+            if (listener != null) {
+                api.unregisterAudioListener(listener);
+            }
+        } catch (Throwable e) {
+            platform.error("Failed to stop bot with vc_id " + vcId + " (listener)", e);
         }
 
-        if (sender != null) {
-            sender.reset();
-            api.unregisterAudioSender(sender);
-            sender = null;
+        try {
+            if (sender != null) {
+                sender.reset();
+                api.unregisterAudioSender(sender);
+            }
+        } catch (Throwable e) {
+            platform.error("Failed to stop bot with vc_id " + vcId + " (sender)", e);
         }
 
-        lastTimeAudioProvidedToSVC = null;
-        if (resetThread != null) {
-            resetThread.interrupt();
-            while (resetThread != null && resetThread.isAlive()) {
-                try {
-                    platform.debug("waiting for reset thread to end");
-                    Thread.sleep(100);
-                } catch (InterruptedException ignored) {
+        try {
+            if (resetThread != null) {
+                resetThread.interrupt();
+                for (int i = 0; i < 20; i++) {
+                    if (resetThread != null && resetThread.isAlive()) {
+                        try {
+                            platform.debug("waiting for reset thread to end");
+                            Thread.sleep(100);
+                        } catch (InterruptedException ignored) {
+                        }
+                    } else {
+                        break;
+                    }
                 }
             }
-            resetThread = null;
+        } catch (Throwable e) {
+            platform.error("Failed to stop bot with vc_id " + vcId + " (reset thread)", e);
         }
 
-        if (senderThread != null) {
-            senderThread.interrupt(); // this really doesn't help stop the thread
-            while (senderThread != null && senderThread.isAlive()) {
-                try {
-                    platform.debug("waiting for sender thread to end");
-                    Thread.sleep(100);
-                } catch (InterruptedException ignored) {
+        try {
+            if (senderThread != null) {
+                senderThread.interrupt(); // this really doesn't help stop the thread
+                for (int i = 0; i < 20; i++) {
+                    if (senderThread != null && senderThread.isAlive()) {
+                        try {
+                            platform.debug("waiting for sender thread to end");
+                            Thread.sleep(100);
+                        } catch (InterruptedException ignored) {
+                        }
+                    } else {
+                        break;
+                    }
                 }
             }
-            senderThread = null;
+        } catch (Throwable e) {
+            platform.error("Failed to stop bot with vc_id " + vcId + " (sender thread)", e);
+        }
+
+        try {
+            if (player != null) {
+                var connection = api.getConnectionOf(player);
+                // connection should only be null if the player is not connected to the server
+                if (connection != null) {
+                    connection.setConnected(false);
+                }
+            }
+        } catch (Throwable e) {
+            platform.error("Failed to stop bot with vc_id " + vcId + " (connection)", e);
         }
 
         // Threads are ended, so reset the connection number back to original (it will be incremented in start)
         // This way it doesn't jump from 1 to 3
         connectionNumber--;
 
-        if (player != null) {
-            var connection = api.getConnectionOf(player);
-            // connection should only be null if the player is not connected to the server
-            if (connection != null)
-                connection.setConnected(false);
-            player = null;
-        }
+        lastTimeAudioProvidedToSVC = null;
+        listener = null;
+        sender = null;
+        resetThread = null;
+        senderThread = null;
+        player = null;
 
         // Stop the rust side last so that the state is still Started for any received packets
         try {
@@ -265,6 +313,8 @@ public final class DiscordBot {
         } catch (Throwable e) {
             platform.error("Failed to stop bot with vc_id " + vcId, e);
         }
+
+        platform.debug("Stopped bot with vc_id " + vcId);
     }
 
     private native void _free(long ptr);
