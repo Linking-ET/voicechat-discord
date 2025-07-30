@@ -14,7 +14,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 import static dev.amsam0.voicechatdiscord.Core.api;
-import static dev.amsam0.voicechatdiscord.PlatformProvider.platform;
+import static dev.amsam0.voicechatdiscord.Core.platform;
 
 public final class GroupManager {
     public static final BiMap<UUID, Integer> groupFriendlyIds = new BiMap<>();

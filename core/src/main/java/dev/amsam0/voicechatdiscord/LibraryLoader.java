@@ -15,7 +15,7 @@ import java.security.NoSuchAlgorithmException;
  * <p>
  * Used with permission
  */
-public class LibraryLoader {
+public final class LibraryLoader {
     private static final String OS_NAME = System.getProperty("os.name").toLowerCase();
     private static final String OS_ARCH = System.getProperty("os.arch").toLowerCase();
 

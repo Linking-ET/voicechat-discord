@@ -14,9 +14,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 import static dev.amsam0.voicechatdiscord.Core.api;
-import static dev.amsam0.voicechatdiscord.PlatformProvider.platform;
+import static dev.amsam0.voicechatdiscord.Core.platform;
 
-public class DiscordBot {
+public final class DiscordBot {
     // Make sure to mirror this value on the Rust side (`DiscordBot::reset_senders::DURATION_UNTIL_RESET`)
     private static final int MILLISECONDS_UNTIL_RESET = 1000;
     /**

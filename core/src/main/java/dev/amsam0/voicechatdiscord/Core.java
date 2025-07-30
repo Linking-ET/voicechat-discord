@@ -16,14 +16,15 @@ import java.util.UUID;
 
 import static dev.amsam0.voicechatdiscord.Constants.CONFIG_HEADER;
 import static dev.amsam0.voicechatdiscord.Constants.VOICECHAT_MIN_VERSION;
-import static dev.amsam0.voicechatdiscord.PlatformProvider.platform;
 
 /**
  * Core code between Paper and Fabric.
  */
 public final class Core {
+    public static VoicechatServerApi api; // Initiated by VoicechatPlugin
+    public static Platform platform; // Initiated upon startup by platform
+
     public static ArrayList<DiscordBot> bots = new ArrayList<>();
-    public static VoicechatServerApi api;
     public static int debugLevel = 0;
 
     private static native void initializeNatives();

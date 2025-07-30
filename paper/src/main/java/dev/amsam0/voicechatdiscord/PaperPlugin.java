@@ -16,13 +16,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import static dev.amsam0.voicechatdiscord.Constants.PLUGIN_ID;
 import static dev.amsam0.voicechatdiscord.Core.*;
-import static dev.amsam0.voicechatdiscord.PlatformProvider.platform;
 
 public final class PaperPlugin extends JavaPlugin implements Listener {
     public static final Logger LOGGER = LogManager.getLogger(PLUGIN_ID);
     public static PaperPlugin INSTANCE;
     public static CommandHelper commandHelper;
-    private VoicechatPlugin voicechatPlugin;
+
+    private PaperVoicechatPlugin voicechatPlugin;
 
     public static PaperPlugin get() {
         return INSTANCE;
@@ -31,6 +31,10 @@ public final class PaperPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         INSTANCE = this;
+
+        if (platform == null) {
+            platform = new PaperPlatform();
+        }
 
         try {
             var parsed = Version.parse(getServer().getMinecraftVersion(), false);
@@ -66,11 +70,12 @@ public final class PaperPlugin extends JavaPlugin implements Listener {
 
         BukkitVoicechatService service = getServer().getServicesManager().load(BukkitVoicechatService.class);
         if (service != null) {
-            voicechatPlugin = new VoicechatPlugin();
+            voicechatPlugin = new PaperVoicechatPlugin();
             service.registerPlugin(voicechatPlugin);
             LOGGER.info("Successfully registered voicechat discord plugin");
         } else {
             LOGGER.error("Failed to register voicechat discord plugin");
+            throw new RuntimeException("Failed to register voicechat discord plugin");
         }
 
         enable();

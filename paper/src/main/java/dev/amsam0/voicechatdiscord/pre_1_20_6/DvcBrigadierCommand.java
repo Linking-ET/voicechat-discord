@@ -27,8 +27,8 @@ import java.util.concurrent.CompletableFuture;
 
 import static dev.amsam0.voicechatdiscord.BukkitHelper.getCraftServer;
 import static dev.amsam0.voicechatdiscord.BukkitHelper.getVanillaCommandWrapper;
+import static dev.amsam0.voicechatdiscord.Core.platform;
 import static dev.amsam0.voicechatdiscord.PaperPlugin.get;
-import static dev.amsam0.voicechatdiscord.PlatformProvider.platform;
 
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 @DefaultQualifier(NonNull.class)

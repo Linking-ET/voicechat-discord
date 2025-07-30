@@ -13,6 +13,10 @@ import static dev.amsam0.voicechatdiscord.Core.*;
 public class FabricMod implements DedicatedServerModInitializer {
     @Override
     public void onInitializeServer() {
+        if (platform == null) {
+            platform = new FabricPlatform();
+        }
+
         enable();
 
         ModContainer svcMod = FabricLoader.getInstance().getModContainer("voicechat").orElse(null);

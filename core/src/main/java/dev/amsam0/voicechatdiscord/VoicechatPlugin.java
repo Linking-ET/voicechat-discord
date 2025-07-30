@@ -6,9 +6,15 @@ import de.maxhenkel.voicechat.api.events.*;
 
 import static dev.amsam0.voicechatdiscord.Constants.PLUGIN_ID;
 import static dev.amsam0.voicechatdiscord.Core.api;
-import static dev.amsam0.voicechatdiscord.PlatformProvider.platform;
+import static dev.amsam0.voicechatdiscord.Core.platform;
 
-public class VoicechatPlugin implements de.maxhenkel.voicechat.api.VoicechatPlugin {
+public abstract class VoicechatPlugin implements de.maxhenkel.voicechat.api.VoicechatPlugin {
+    public VoicechatPlugin() {
+        ensurePlatformInitialized();
+    }
+
+    protected abstract void ensurePlatformInitialized();
+
     @Override
     public String getPluginId() {
         return PLUGIN_ID;

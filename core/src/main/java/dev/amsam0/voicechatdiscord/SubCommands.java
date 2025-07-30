@@ -19,7 +19,6 @@ import static com.mojang.brigadier.builder.RequiredArgumentBuilder.argument;
 import static dev.amsam0.voicechatdiscord.Constants.RELOAD_CONFIG_PERMISSION;
 import static dev.amsam0.voicechatdiscord.Core.*;
 import static dev.amsam0.voicechatdiscord.GroupManager.*;
-import static dev.amsam0.voicechatdiscord.PlatformProvider.platform;
 import static dev.amsam0.voicechatdiscord.util.Util.getArgumentOr;
 
 /**
