@@ -92,13 +92,12 @@ public class DiscordBot {
             platform.debug("Logged into the bot with vc_id " + vcId);
             return true;
         } catch (Throwable e) {
-            platform.error("Failed to login to the bot with vc_id " + vcId + ": " + e);
-            platform.debug(e);
+            platform.error("Failed to login to the bot with vc_id " + vcId, e);
             if (player != null) {
                 platform.sendMessage(
                         player,
                         // The error message won't contain the token, but let's be safe and not show it to the player
-                        "<red>Failed to login to the bot. Please contact your server owner and ask them to look at the console since they will be able to see the error message."
+                        Component.red("Failed to login to the bot. Please contact your server owner and ask them to look at the console since they will be able to see the error message.")
                 );
                 player = null;
             }
@@ -115,11 +114,10 @@ public class DiscordBot {
         try {
             vcName = _start(ptr);
         } catch (Throwable e) {
-            platform.error("Failed to start voice connection for bot with vc_id " + vcId + ": " + e);
-            platform.debug(e);
+            platform.error("Failed to start voice connection for bot with vc_id " + vcId, e);
             platform.sendMessage(
                     player,
-                    "<red>Failed to start voice connection. Please contact your server owner since they will be able to see the error message."
+                    Component.red("Failed to start voice connection. Please contact your server owner since they will be able to see the error message.")
             );
             stop();
             return;
@@ -139,7 +137,7 @@ public class DiscordBot {
             platform.error("Couldn't register audio sender. The player has the mod installed.");
             platform.sendMessage(
                     player,
-                    "<red>It seems that you have Simple Voice Chat installed on your client. To use the addon, you must not have Simple Voice Chat installed on your client."
+                    Component.red("It seems that you have Simple Voice Chat installed on your client. To use the addon, you must not have Simple Voice Chat installed on your client.")
             );
             stop();
             return;
@@ -198,7 +196,12 @@ public class DiscordBot {
         platform.info("Started voice chat for " + platform.getName(player) + " in channel " + vcName + " with bot with vc_id " + vcId);
         platform.sendMessage(
                 player,
-                "<green>Started a voice chat! To stop it, use <white>/dvc stop<green>. If you are having issues, try restarting the session with <white>/dvc start<green>. Please join the following voice channel in discord: <white>" + vcName
+                Component.green("Started a voice chat! To stop it, use "),
+                Component.white("/dvc stop"),
+                Component.green(". If you are having issues, try restarting the session with "),
+                Component.white("/dvc start"),
+                Component.green(". Please join the following voice channel in discord: "),
+                Component.white(vcName)
         );
     }
 
@@ -260,8 +263,7 @@ public class DiscordBot {
         try {
             _stop(ptr);
         } catch (Throwable e) {
-            platform.warn("Failed to stop bot with vc_id " + vcId + ": " + e);
-            platform.debug(e);
+            platform.error("Failed to stop bot with vc_id " + vcId, e);
         }
     }
 

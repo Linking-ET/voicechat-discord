@@ -5,13 +5,11 @@ import com.github.zafarkhaja.semver.Version;
 import de.maxhenkel.voicechat.api.BukkitVoicechatService;
 import dev.amsam0.voicechatdiscord.post_1_20_6.Post_1_20_6_CommandHelper;
 import dev.amsam0.voicechatdiscord.pre_1_20_6.Pre_1_20_6_CommandHelper;
-import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,7 +21,6 @@ import static dev.amsam0.voicechatdiscord.PlatformProvider.platform;
 public final class PaperPlugin extends JavaPlugin implements Listener {
     public static final Logger LOGGER = LogManager.getLogger(PLUGIN_ID);
     public static PaperPlugin INSTANCE;
-    public static BukkitAudiences adventure;
     public static CommandHelper commandHelper;
     private VoicechatPlugin voicechatPlugin;
 
@@ -34,7 +31,6 @@ public final class PaperPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         INSTANCE = this;
-        adventure = BukkitAudiences.create(this);
 
         try {
             var parsed = Version.parse(getServer().getMinecraftVersion(), false);
@@ -49,8 +45,7 @@ public final class PaperPlugin extends JavaPlugin implements Listener {
             }
         } catch (IllegalArgumentException | ParseException e) {
             var v = getServer().getMinecraftVersion();
-            platform.warn("Unable to parse server version (" + v + "): " + e);
-            platform.debug(e);
+            platform.error("Unable to parse server version (" + v + ")", e);
 
             if (v.equals("1.19.4") ||
                     v.equals("1.20") ||
@@ -81,6 +76,7 @@ public final class PaperPlugin extends JavaPlugin implements Listener {
         enable();
 
         Plugin svcPlugin = getServer().getPluginManager().getPlugin("voicechat");
+        //noinspection deprecation
         checkSVCVersion(svcPlugin != null ? svcPlugin.getDescription().getVersion() : null);
 
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -95,11 +91,6 @@ public final class PaperPlugin extends JavaPlugin implements Listener {
         if (voicechatPlugin != null) {
             getServer().getServicesManager().unregister(voicechatPlugin);
             LOGGER.info("Successfully unregistered voicechat discord plugin");
-        }
-
-        if (adventure != null) {
-            adventure.close();
-            adventure = null;
         }
     }
 

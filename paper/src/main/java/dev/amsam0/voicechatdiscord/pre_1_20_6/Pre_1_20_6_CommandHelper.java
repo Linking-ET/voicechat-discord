@@ -47,7 +47,7 @@ public class Pre_1_20_6_CommandHelper implements CommandHelper, Listener {
         return ((BukkitBrigadierCommandSource) context.getSource()).getBukkitSender();
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes", "UnstableApiUsage"})
+    @SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
     @EventHandler
     public void onCommandRegistered(final CommandRegisteredEvent<BukkitBrigadierCommandSource> event) {
         if (!(event.getCommand() instanceof DvcBrigadierCommand))

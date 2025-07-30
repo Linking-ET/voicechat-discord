@@ -59,8 +59,7 @@ public final class Core {
             shutdownNatives();
             platform.info("Successfully shutdown native runtime");
         } catch (Throwable e) {
-            platform.error("Failed to shutdown native runtime: " + e);
-            platform.debug(e);
+            platform.error("Failed to shutdown native runtime", e);
         }
     }
 
@@ -75,10 +74,9 @@ public final class Core {
         try {
             config.load(configFile);
         } catch (IOException e) {
-            platform.warn("IOException when loading config: " + e);
-            platform.debug(e);
+            platform.debug("IOException when loading config", e);
         } catch (InvalidConfigurationException e) {
-            platform.error("Failed to load config file: " + e);
+            platform.error("Failed to load config file");
             throw new RuntimeException(e);
         }
 
@@ -138,8 +136,7 @@ public final class Core {
             try {
                 discordBot.stop();
             } catch (Throwable e) {
-                platform.error("Error when stopping bot: " + e);
-                platform.debug(e);
+                platform.error("Error when stopping bot", e);
             }
             discordBot.free();
         });
@@ -205,8 +202,7 @@ public final class Core {
                 throw new RuntimeException(message);
             }
         } catch (IllegalArgumentException | ParseException e) {
-            platform.error("Failed to parse SVC version: " + e);
-            platform.debug(e);
+            platform.error("Failed to parse SVC version", e);
             platform.warn("Assuming SVC is " + VOICECHAT_MIN_VERSION + " or later. If not, things will break.");
         }
     }

@@ -4,15 +4,11 @@ import com.mojang.brigadier.context.CommandContext;
 import de.maxhenkel.voicechat.api.Position;
 import de.maxhenkel.voicechat.api.ServerLevel;
 import de.maxhenkel.voicechat.api.ServerPlayer;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.ansi.ANSIComponentSerializer;
-import org.bukkit.Bukkit;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.Permissible;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.InvocationTargetException;
@@ -21,15 +17,16 @@ import java.util.UUID;
 
 import static dev.amsam0.voicechatdiscord.BukkitHelper.getCraftWorld;
 import static dev.amsam0.voicechatdiscord.Core.api;
-import static dev.amsam0.voicechatdiscord.PaperPlugin.*;
+import static dev.amsam0.voicechatdiscord.PaperPlugin.LOGGER;
+import static dev.amsam0.voicechatdiscord.PaperPlugin.commandHelper;
 
 public class PaperPlatform implements Platform {
-    public boolean isValidPlayer(Object sender) {
-        if (sender instanceof CommandContext<?> context)
-            return commandHelper.bukkitEntity(context) instanceof Player;
-        return sender instanceof Player;
+    @Override
+    public boolean isValidPlayer(CommandContext<?> sender) {
+        return commandHelper.bukkitEntity(sender) instanceof Player;
     }
 
+    @Override
     public ServerPlayer commandContextToPlayer(CommandContext<?> context) {
         return api.fromServerPlayer(commandHelper.bukkitEntity(context));
     }
@@ -40,6 +37,7 @@ public class PaperPlatform implements Platform {
     private Method ServerLevel$getEntityLookup;
     private Method EntityLookup$get;
     private Method Entity$getBukkitEntity;
+    private boolean printedReflectionFail = false;
 
     private net.minecraft.world.entity.Entity getNmsEntityOld(net.minecraft.server.level.ServerLevel nmsLevel, UUID uuid) {
         try {
@@ -53,8 +51,7 @@ public class PaperPlatform implements Platform {
 
             return (net.minecraft.world.entity.Entity) EntityLookup$get.invoke(entityLookup, uuid);
         } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
-            debug("Failed to get nms entity: " + e);
-            debug(e);
+            debug("Failed to get nms entity", e);
             // This should always fail unfortunately, but we don't have any other options
             return nmsLevel.getEntity(uuid);
         }
@@ -76,15 +73,17 @@ public class PaperPlatform implements Platform {
 
             return (Entity) Entity$getBukkitEntity.invoke(nmsEntity);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            debug("Failed to get bukkit entity: " + e);
-            debug(e);
+            if (!printedReflectionFail) {
+                error("Failed to get bukkit entity", e);
+                printedReflectionFail = true;
+            }
             // This will probably fail; see above notes
             return nmsEntity.getBukkitEntity();
         }
     }
 
     private @Nullable Position getEntityPosition(net.minecraft.server.level.ServerLevel nmsLevel, UUID uuid) {
-        net.minecraft.world.entity.Entity nmsEntity;
+        net.minecraft.world.entity.Entity nmsEntity = null;
         if (shouldTryMoonrise) {
             try {
                 // Works on 1.21+
@@ -92,23 +91,23 @@ public class PaperPlatform implements Platform {
             } catch (NoSuchMethodError ignored) {
                 shouldTryMoonrise = false;
                 debug("Moonrise failed");
-                nmsEntity = getNmsEntityOld(nmsLevel, uuid);
             }
-        } else {
+        }
+        if (!shouldTryMoonrise) {
             nmsEntity = getNmsEntityOld(nmsLevel, uuid);
         }
         if (nmsEntity == null) return null;
 
-        Entity bukkitEntity;
+        Entity bukkitEntity = null;
         if (shouldTryGetBukkitEntityWithoutReflection) {
             try {
                 bukkitEntity = nmsEntity.getBukkitEntity();
             } catch (NoSuchMethodError ignored) {
                 shouldTryGetBukkitEntityWithoutReflection = false;
                 debug("Getting bukkit entity without reflection failed");
-                bukkitEntity = getBukkitEntityReflection(nmsEntity);
             }
-        } else {
+        }
+        if (!shouldTryGetBukkitEntityWithoutReflection) {
             bukkitEntity = getBukkitEntityReflection(nmsEntity);
         }
         if (bukkitEntity == null) return null;
@@ -122,6 +121,7 @@ public class PaperPlatform implements Platform {
         );
     }
 
+    @Override
     public @Nullable Position getEntityPosition(ServerLevel level, UUID uuid) {
         try {
             if (level.getServerLevel() instanceof World world) {
@@ -152,78 +152,92 @@ public class PaperPlatform implements Platform {
         return null;
     }
 
-    public boolean isOperator(Object sender) {
-        if (sender instanceof CommandContext<?> context)
-            return commandHelper.bukkitSender(context).isOp();
-        if (sender instanceof Permissible permissible)
-            return permissible.isOp();
-
-        return false;
+    @Override
+    public boolean isOperator(CommandContext<?> sender) {
+        return commandHelper.bukkitSender(sender).isOp();
     }
 
-    public boolean hasPermission(Object sender, String permission) {
-        if (!(sender instanceof Permissible))
-            return false;
-        return ((Permissible) sender).hasPermission(permission);
+    @Override
+    public boolean hasPermission(CommandContext<?> sender, String permission) {
+        return commandHelper.bukkitSender(sender).hasPermission(permission);
     }
 
-    public void sendMessage(Object sender, String message) {
-        if (sender instanceof CommandSender player)
-            adventure.sender(player).sendMessage(mm(message));
-        else if (sender instanceof CommandContext<?> context) {
-            if (commandHelper.bukkitEntity(context) instanceof Player player)
-                adventure.player(player).sendMessage(mm(message));
-            else
-                adventure.sender(commandHelper.bukkitSender(context)).sendMessage(mm(message));
-        } else
-            warn("Seems like we are trying to send a message to a sender which was not recognized (it is a " + sender.getClass().getSimpleName() + "). Please report this on GitHub issues!");
-
+    @Override
+    public void sendMessage(CommandContext<?> sender, Component... message) {
+        if (commandHelper.bukkitEntity(sender) instanceof Player player) {
+            player.sendMessage(toNative(message));
+        } else {
+            commandHelper.bukkitSender(sender).sendMessage(toNative(message));
+        }
     }
 
-    public void sendMessage(de.maxhenkel.voicechat.api.Player player, String message) {
-        adventure.player((Player) player.getPlayer()).sendMessage(mm(message));
+    @Override
+    public void sendMessage(de.maxhenkel.voicechat.api.Player player, Component... message) {
+        ((Player) player.getPlayer()).sendMessage(toNative(message));
     }
 
+    public void sendMessage(CommandSender sender, Component... message) {
+        sender.sendMessage(toNative(message));
+    }
+
+    private net.kyori.adventure.text.Component toNative(Component... message) {
+        net.kyori.adventure.text.Component nativeComponent = null;
+
+        for (var component : message) {
+            net.kyori.adventure.text.Component mapped = net.kyori.adventure.text.Component.text(
+                    component.text(),
+                    switch (component.color()) {
+                        case WHITE -> NamedTextColor.WHITE;
+                        case RED -> NamedTextColor.RED;
+                        case YELLOW -> NamedTextColor.YELLOW;
+                        case GREEN -> NamedTextColor.GREEN;
+                    }
+            );
+            if (nativeComponent == null) {
+                nativeComponent = mapped;
+            } else {
+                nativeComponent = nativeComponent.append(mapped);
+            }
+        }
+
+        if (nativeComponent == null) {
+            return net.kyori.adventure.text.Component.empty();
+        }
+        return nativeComponent;
+    }
+
+    @Override
     public String getName(de.maxhenkel.voicechat.api.Player player) {
         return ((Player) player.getPlayer()).getName();
     }
 
+    @Override
     public String getConfigPath() {
         return "plugins/voicechat-discord/config.yml";
     }
 
+    @Override
     public Loader getLoader() {
         return Loader.PAPER;
     }
 
     @Override
-    public String getMinecraftVersion() {
-        return Bukkit.getMinecraftVersion();
-    }
-
     public void info(String message) {
-        LOGGER.info(ansi(mm(message)));
-    }
-
-    public void infoRaw(String message) {
         LOGGER.info(message);
     }
 
-    // warn and error will already be colored yellow and red respectfully
-
+    @Override
     public void warn(String message) {
         LOGGER.warn(message);
     }
 
+    @Override
     public void error(String message) {
         LOGGER.error(message);
     }
 
-    private Component mm(String message) {
-        return MiniMessage.miniMessage().deserialize(message);
-    }
-
-    private String ansi(Component component) {
-        return ANSIComponentSerializer.ansi().serialize(component);
+    @Override
+    public void error(String message, Throwable throwable) {
+        LOGGER.error(message, throwable);
     }
 }

@@ -12,21 +12,21 @@ import java.util.UUID;
 import static dev.amsam0.voicechatdiscord.Core.debugLevel;
 
 public interface Platform {
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    boolean isValidPlayer(Object sender);
-
-    ServerPlayer commandContextToPlayer(CommandContext<?> context);
-
     @Nullable
     Position getEntityPosition(ServerLevel level, UUID uuid);
 
-    boolean isOperator(Object sender);
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    boolean isValidPlayer(CommandContext<?> sender);
 
-    boolean hasPermission(Object sender, String permission);
+    ServerPlayer commandContextToPlayer(CommandContext<?> context);
 
-    void sendMessage(Object sender, String message);
+    boolean isOperator(CommandContext<?> sender);
 
-    void sendMessage(Player player, String message);
+    boolean hasPermission(CommandContext<?> sender, String permission);
+
+    void sendMessage(CommandContext<?> sender, Component... message);
+
+    void sendMessage(Player player, Component... message);
 
     String getName(Player player);
 
@@ -34,38 +34,28 @@ public interface Platform {
 
     Loader getLoader();
 
-    String getMinecraftVersion();
-
-    // Paper uses log4j, Fabric uses slf4j
     void info(String message);
-
-    void infoRaw(String message);
 
     void warn(String message);
 
     void error(String message);
 
+    void error(String message, Throwable throwable);
+
     default void debug(String message) {
-        debug(message, 1);
+        if (debugLevel >= 1) info("[DEBUG 1] " + message);
     }
 
     default void debugVerbose(String message) {
-        debug(message, 2);
+        if (debugLevel >= 2) info("[DEBUG 2] " + message);
     }
 
     default void debugExtremelyVerbose(String message) {
-        debug(message, 3);
+        if (debugLevel >= 3) info("[DEBUG 3] " + message);
     }
 
-    @SuppressWarnings("CallToPrintStackTrace")
-    default void debug(Throwable throwable) {
-        if (debugLevel >= 1)
-            throwable.printStackTrace();
-    }
-
-    private void debug(String message, int levelToLog) {
-        // debugs are used so frequently and without color that there's no point in using minimessage
-        if (debugLevel >= levelToLog) infoRaw("[DEBUG " + levelToLog + "] " + message);
+    default void debug(String message, Throwable throwable) {
+        if (debugLevel >= 1) error("[DEBUG 1] " + message, throwable);
     }
 
     enum Loader {

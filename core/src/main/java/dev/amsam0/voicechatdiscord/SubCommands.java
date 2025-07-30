@@ -7,10 +7,7 @@ import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.ServerPlayer;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -68,14 +65,13 @@ public final class SubCommands {
                 );
     }
 
-    private static Command<Object> wrapInTry(Consumer<CommandContext<?>> function) {
+    private static <S> Command<S> wrapInTry(Consumer<CommandContext<?>> function) {
         return (sender) -> {
             try {
                 function.accept(sender);
             } catch (Throwable e) {
-                platform.error("An error occurred when running a command: " + e);
-                platform.debug(e);
-                platform.sendMessage(sender, "<red>An error occurred when running the command. Please check the console or tell your server owner to check the console.");
+                platform.error("An error occurred when running a command", e);
+                platform.sendMessage(sender, Component.red("An error occurred when running the command. Please check the console or tell your server owner to check the console."));
             }
             return 1;
         };
@@ -83,7 +79,7 @@ public final class SubCommands {
 
     private static void start(CommandContext<?> sender) {
         if (!platform.isValidPlayer(sender)) {
-            platform.sendMessage(sender, "<red>You must be a player to use this command!");
+            platform.sendMessage(sender, Component.red("You must be a player to use this command!"));
             return;
         }
 
@@ -94,9 +90,9 @@ public final class SubCommands {
         DiscordBot botForPlayer = getBotForPlayer(player.getUuid());
         if (botForPlayer != null) {
             if (!botForPlayer.isStarted()) {
-                platform.sendMessage(player, "<yellow>Your voice chat is currently starting.");
+                platform.sendMessage(sender, Component.yellow("Your voice chat is currently starting."));
             } else {
-                platform.sendMessage(player, "<red>You have already started a voice chat! <yellow>Restarting your session...");
+                platform.sendMessage(sender, Component.red("You have already started a voice chat! "), Component.yellow("Restarting your session..."));
                 new Thread(() -> {
                     botForPlayer.stop();
                     try {
@@ -112,20 +108,20 @@ public final class SubCommands {
 
         if (bot == null) {
             platform.sendMessage(
-                    player,
-                    "<red>There are currently no bots available. You might want to contact your server owner to add more."
+                    sender,
+                    Component.red("There are currently no bots available. You might want to contact your server owner to add more.")
             );
             return;
         }
 
-        platform.sendMessage(player, "<yellow>Starting a voice chat...");
+        platform.sendMessage(sender, Component.yellow("Starting a voice chat..."));
 
         new Thread(() -> bot.logInAndStart(player), "voicechat-discord: Bot Start for " + player.getUuid()).start();
     }
 
     private static void stop(CommandContext<?> sender) {
         if (!platform.isValidPlayer(sender)) {
-            platform.sendMessage(sender, "<red>You must be a player to use this command!");
+            platform.sendMessage(sender, Component.red("You must be a player to use this command!"));
             return;
         }
 
@@ -133,16 +129,16 @@ public final class SubCommands {
 
         DiscordBot bot = getBotForPlayer(player.getUuid());
         if (bot == null || !bot.isStarted()) {
-            platform.sendMessage(player, "<red>You must start a voice chat before you can use this command!");
+            platform.sendMessage(player, Component.red("You must start a voice chat before you can use this command!"));
             return;
         }
 
-        platform.sendMessage(player, "<yellow>Stopping the bot...");
+        platform.sendMessage(player, Component.yellow("Stopping the bot..."));
 
         new Thread(() -> {
             bot.stop();
 
-            platform.sendMessage(sender, "<green>Successfully stopped the bot!");
+            platform.sendMessage(sender, Component.green("Successfully stopped the bot!"));
         }, "voicechat-discord: Bot Stop for " + player.getUuid()).start();
     }
 
@@ -153,37 +149,43 @@ public final class SubCommands {
         )) {
             platform.sendMessage(
                     sender,
-                    "<red>You must be an operator or have the `" + RELOAD_CONFIG_PERMISSION + "` permission to use this command!"
+                    Component.red("You must be an operator or have the `" + RELOAD_CONFIG_PERMISSION + "` permission to use this command!")
             );
             return;
         }
 
-        platform.sendMessage(sender, "<yellow>Stopping bots...");
+        platform.sendMessage(sender, Component.yellow("Stopping bots..."));
 
         new Thread(() -> {
             for (DiscordBot bot : bots)
                 if (bot.player() != null)
                     platform.sendMessage(
                             bot.player(),
-                            "<red>The config is being reloaded which stops all bots. Please use <white>/dvc start <red>to restart your session."
+                            Component.red("The config is being reloaded which stops all bots. Please use "),
+                            Component.white("/dvc start"),
+                            Component.red(" to restart your session.")
                     );
 
             clearBots();
 
-            platform.sendMessage(sender, "<green>Successfully stopped bots! <yellow>Reloading config...");
+            platform.sendMessage(
+                    sender,
+                    Component.green("Successfully stopped bots! "),
+                    Component.yellow("Reloading config...")
+            );
 
             loadConfig();
 
             platform.sendMessage(
                     sender,
-                    "<green>Successfully reloaded config! Using " + bots.size() + " bot" + (bots.size() != 1 ? "s" : "") + "."
+                    Component.green("Successfully reloaded config! Using " + bots.size() + " bot" + (bots.size() != 1 ? "s" : "") + ".")
             );
         }, "voicechat-discord: Reload Config").start();
     }
 
     private static void toggleWhisper(CommandContext<?> sender) {
         if (!platform.isValidPlayer(sender)) {
-            platform.sendMessage(sender, "<red>You must be a player to use this command!");
+            platform.sendMessage(sender, Component.red("You must be a player to use this command!"));
             return;
         }
 
@@ -191,20 +193,20 @@ public final class SubCommands {
 
         DiscordBot bot = getBotForPlayer(player.getUuid());
         if (bot == null || !bot.isStarted()) {
-            platform.sendMessage(player, "<red>You must start a voice chat before you can use this command!");
+            platform.sendMessage(player, Component.red("You must start a voice chat before you can use this command!"));
             return;
         }
 
         var set = !bot.whispering();
         bot.whispering(set);
 
-        platform.sendMessage(sender, set ? "<green>Started whispering!" : "<green>Stopped whispering!");
+        platform.sendMessage(sender, set ? Component.green("Started whispering!") : Component.green("Stopped whispering!"));
     }
 
     private static final class GroupCommands {
         private static boolean checkIfGroupsEnabled(CommandContext<?> sender) {
             if (!api.getServerConfig().getBoolean("enable_groups", true)) {
-                platform.sendMessage(sender, "<red>Groups are currently disabled.");
+                platform.sendMessage(sender, Component.red("Groups are currently disabled."));
                 return true;
             }
             return false;
@@ -214,15 +216,14 @@ public final class SubCommands {
         private static int help(CommandContext<?> sender) {
             platform.sendMessage(
                     sender,
-                    """
-                            <red>Available subcommands:
-                             - `<white>/dvc group list<red>`: List groups
-                             - `<white>/dvc group create <name> [password] [type] [persistent]<red>`: Create a group
-                             - `<white>/dvc group join <ID><red>`: Join a group
-                             - `<white>/dvc group info<red>`: Get info about your current group
-                             - `<white>/dvc group leave<red>`: Leave your current group
-                             - `<white>/dvc group remove <ID><red>`: Removes a persistent group if there is no one in it
-                            See <white>https://github.com/amsam0/voicechat-discord#dvc-group<red> for more info on how to use these commands."""
+                    Component.red("Available subcommands:\n"),
+                    Component.red("- `"), Component.white("/dvc group list"), Component.red("`: List groups\n"),
+                    Component.red("- `"), Component.white("/dvc group create <name> [password] [type] [persistent]"), Component.red("`: Create a group\n"),
+                    Component.red("- `"), Component.white("/dvc group join <ID>"), Component.red("`: Join a group\n"),
+                    Component.red("- `"), Component.white("/dvc group info"), Component.red("`: Get info about your current group\n"),
+                    Component.red("- `"), Component.white("/dvc group leave"), Component.red("`: Leave your current group\n"),
+                    Component.red("- `"), Component.white("/dvc group remove <ID>"), Component.red("`: Removes a persistent group if there is no one in it\n"),
+                    Component.red("See "), Component.white("https://github.com/amsam0/voicechat-discord#dvc-group"), Component.red(" for more info on how to use these commands.")
             );
             return 1;
         }
@@ -233,48 +234,56 @@ public final class SubCommands {
             Collection<Group> apiGroups = api.getGroups();
 
             if (apiGroups.isEmpty())
-                platform.sendMessage(sender, "<red>There are currently no groups.");
+                platform.sendMessage(sender, Component.red("There are currently no groups."));
             else {
-                StringBuilder groupsMessage = new StringBuilder("<green>Groups:\n");
+                ArrayList<Component> groupsMessage = new ArrayList<>();
+                groupsMessage.add(Component.green("Groups:"));
 
                 for (Group group : apiGroups) {
+                    groupsMessage.add(Component.white("\n"));
+
                     int friendlyId = groupFriendlyIds.get(group.getId());
                     platform.debugVerbose("Friendly ID for " + group.getId() + " (" + group.getName() + ") is " + friendlyId);
 
-                    String playersMessage = "<red>No players";
-                    List<ServerPlayer> players = groupPlayers.get(group.getId());
-                    if (players == null)
-                        playersMessage = "<red>Unable to get players";
-                    else if (!players.isEmpty())
-                        playersMessage = players.stream().map(player -> platform.getName(player)).collect(Collectors.joining(", "));
+                    groupsMessage.add(Component.green(" - " + group.getName() + " (ID is " + friendlyId + "): "));
 
-                    groupsMessage.append("<green> - ")
-                            .append(group.getName())
-                            .append(" (ID is ")
-                            .append(friendlyId)
-                            .append("): ")
-                            .append(group.hasPassword() ? "<red>Has password" : "<green>No password")
-                            .append(group.isPersistent() ? "<yellow>, persistent" : "")
-                            .append(".<green> Group type is ")
-                            .append(
-                                    group.getType() == Group.Type.NORMAL ? "normal" :
-                                            group.getType() == Group.Type.OPEN ? "open" :
-                                                    group.getType() == Group.Type.ISOLATED ? "isolated" :
-                                                            "unknown"
-                            )
-                            .append(". Players: ")
-                            .append(playersMessage)
-                            .append("\n");
+                    if (group.isPersistent()) {
+                        groupsMessage.add(group.hasPassword() ? Component.red("Has password") : Component.green("No password"));
+                        groupsMessage.add(Component.yellow(", persistent."));
+                    } else {
+                        groupsMessage.add(group.hasPassword() ? Component.red("Has password.") : Component.green("No password."));
+                    }
+
+                    String groupType;
+                    if (group.getType() == Group.Type.NORMAL) {
+                        groupType = "normal";
+                    } else if (group.getType() == Group.Type.OPEN) {
+                        groupType = "open";
+                    } else if (group.getType() == Group.Type.ISOLATED) {
+                        groupType = "isolated";
+                    } else {
+                        groupType = "unknown";
+                    }
+                    groupsMessage.add(Component.green(" Group type is " + groupType + ". Players: "));
+
+                    Component playersMessage = Component.red("No players");
+                    List<ServerPlayer> players = groupPlayers.get(group.getId());
+                    if (players == null) {
+                        playersMessage = Component.red("Unable to get players");
+                    } else if (!players.isEmpty()) {
+                        playersMessage = Component.green(players.stream().map(player -> platform.getName(player)).collect(Collectors.joining(", ")));
+                    }
+                    groupsMessage.add(playersMessage);
                 }
 
-                platform.sendMessage(sender, groupsMessage.toString().trim());
+                platform.sendMessage(sender, groupsMessage.toArray(Component[]::new));
             }
         }
 
         private static Consumer<CommandContext<?>> create(Group.Type type) {
             return (sender) -> {
                 if (!platform.isValidPlayer(sender)) {
-                    platform.sendMessage(sender, "<red>You must be a player to use this command!");
+                    platform.sendMessage(sender, Component.red("You must be a player to use this command!"));
                     return;
                 }
 
@@ -290,7 +299,7 @@ public final class SubCommands {
 
                 VoicechatConnection connection = Objects.requireNonNull(api.getConnectionOf(platform.commandContextToPlayer(sender)));
                 if (connection.getGroup() != null) {
-                    platform.sendMessage(sender, "<red>You are already in a group!");
+                    platform.sendMessage(sender, Component.red("You are already in a group!"));
                     return;
                 }
 
@@ -302,13 +311,13 @@ public final class SubCommands {
                         .build();
                 connection.setGroup(group);
 
-                platform.sendMessage(sender, "<green>Successfully created the group!");
+                platform.sendMessage(sender, Component.green("Successfully created the group!"));
             };
         }
 
         private static void join(CommandContext<?> sender) {
             if (!platform.isValidPlayer(sender)) {
-                platform.sendMessage(sender, "<red>You must be a player to use this command!");
+                platform.sendMessage(sender, Component.red("You must be a player to use this command!"));
                 return;
             }
 
@@ -317,7 +326,7 @@ public final class SubCommands {
             Integer friendlyId = sender.getArgument("id", Integer.class);
             UUID groupId = groupFriendlyIds.getKey(friendlyId);
             if (groupId == null) {
-                platform.sendMessage(sender, "<red>Invalid group ID. Please use <white>/dvc group list<red> to see all groups.");
+                platform.sendMessage(sender, Component.red("Invalid group ID. Please use "), Component.white("/dvc group list"), Component.red(" to see all groups."));
                 return;
             }
 
@@ -329,40 +338,40 @@ public final class SubCommands {
                         inputPassword = null;
 
                 if (inputPassword == null) {
-                    platform.sendMessage(sender, "<red>The group has a password, and you have not provided one. Please rerun the command, including the password.");
+                    platform.sendMessage(sender, Component.red("The group has a password, and you have not provided one. Please rerun the command, including the password."));
                     return;
                 }
 
                 String groupPassword = getPassword(group);
                 if (groupPassword == null) {
-                    platform.sendMessage(sender, "<red>Since the group has a password, we need to check if the password you supplied is correct. However, we failed to get the password for the group (the server owner can see the error in console). You may need to update Simple Voice Chat Discord Bridge.");
+                    platform.sendMessage(sender, Component.red("Since the group has a password, we need to check if the password you supplied is correct. However, we failed to get the password for the group (the server owner can see the error in console). You may need to update Simple Voice Chat Discord Bridge."));
                     return;
                 }
 
                 if (!inputPassword.equals(groupPassword)) {
-                    platform.sendMessage(sender, "<red>The password you provided is incorrect. You may want to surround the password in quotes if the password has spaces in it.");
+                    platform.sendMessage(sender, Component.red("The password you provided is incorrect. You may want to surround the password in quotes if the password has spaces in it."));
                     return;
                 }
             }
 
             VoicechatConnection connection = Objects.requireNonNull(api.getConnectionOf(platform.commandContextToPlayer(sender)));
             if (connection.getGroup() != null) {
-                platform.sendMessage(sender, "<red>You are already in a group! Leave it using <white>/dvc group leave<red>, then join this group.");
+                platform.sendMessage(sender, Component.red("You are already in a group! Leave it using "), Component.white("/dvc group leave"), Component.red(", then join this group."));
                 return;
             }
             var botForPlayer = getBotForPlayer(platform.commandContextToPlayer(sender).getUuid());
             if (!connection.isInstalled() && (botForPlayer == null || !botForPlayer.isStarted())) {
-                platform.sendMessage(sender, "<red>You must have the mod installed or start a voice chat before you can use this command!");
+                platform.sendMessage(sender, Component.red("You must have the mod installed or start a voice chat before you can use this command!"));
                 return;
             }
             connection.setGroup(group);
 
-            platform.sendMessage(sender, "<green>Successfully joined group \"" + group.getName() + "\". Use <white>/dvc group info<green> to see info on the group, and <white>/dvc group leave<green> to leave the group.");
+            platform.sendMessage(sender, Component.green("Successfully joined group \"" + group.getName() + "\". Use "), Component.white("/dvc group info"), Component.green(" to see info on the group, and "), Component.white("/dvc group leave"), Component.green(" to leave the group."));
         }
 
         private static void info(CommandContext<?> sender) {
             if (!platform.isValidPlayer(sender)) {
-                platform.sendMessage(sender, "<red>You must be a player to use this command!");
+                platform.sendMessage(sender, Component.red("You must be a player to use this command!"));
                 return;
             }
 
@@ -371,27 +380,49 @@ public final class SubCommands {
             VoicechatConnection connection = Objects.requireNonNull(api.getConnectionOf(platform.commandContextToPlayer(sender)));
             Group group = connection.getGroup();
             if (group == null) {
-                platform.sendMessage(sender, "<red>You are not in a group!");
+                platform.sendMessage(sender, Component.red("You are not in a group!"));
                 return;
             }
 
-            List<ServerPlayer> players = groupPlayers.get(group.getId());
-            String playersMessage = players.stream().map(player -> platform.getName(player)).collect(Collectors.joining(", "));
-            String message = "<green>You are currently in \"" + group.getName() + "\". It " +
-                    (group.hasPassword() ? "<red>has a password<green>" : "does not have a password") + (group.isPersistent() ? " and is persistent." : ".") +
-                    " Group type is " +
-                    (group.getType() == Group.Type.NORMAL ? "normal" :
-                            group.getType() == Group.Type.OPEN ? "open" :
-                                    group.getType() == Group.Type.ISOLATED ? "isolated" :
-                                            "unknown") +
-                    ". Players: " + playersMessage;
+            ArrayList<Component> components = new ArrayList<>();
 
-            platform.sendMessage(sender, message);
+            components.add(Component.green("You are currently in \"" + group.getName() + "\". It "));
+
+            if (group.isPersistent()) {
+                components.add(group.hasPassword() ? Component.red("has a password") : Component.green("does not have a password"));
+                components.add(Component.yellow(" and is persistent."));
+            } else {
+                components.add(group.hasPassword() ? Component.red("has a password.") : Component.green("does not have a password."));
+            }
+
+            String groupType;
+            if (group.getType() == Group.Type.NORMAL) {
+                groupType = "normal";
+            } else if (group.getType() == Group.Type.OPEN) {
+                groupType = "open";
+            } else if (group.getType() == Group.Type.ISOLATED) {
+                groupType = "isolated";
+            } else {
+                groupType = "unknown";
+            }
+            components.add(Component.green(" Group type is " + groupType + ". Players: "));
+
+
+            Component playersMessage = Component.red("No players");
+            List<ServerPlayer> players = groupPlayers.get(group.getId());
+            if (players == null) {
+                playersMessage = Component.red("Unable to get players");
+            } else if (!players.isEmpty()) {
+                playersMessage = Component.green(players.stream().map(player -> platform.getName(player)).collect(Collectors.joining(", ")));
+            }
+            components.add(playersMessage);
+
+            platform.sendMessage(sender, components.toArray(Component[]::new));
         }
 
         private static void leave(CommandContext<?> sender) {
             if (!platform.isValidPlayer(sender)) {
-                platform.sendMessage(sender, "<red>You must be a player to use this command!");
+                platform.sendMessage(sender, Component.red("You must be a player to use this command!"));
                 return;
             }
 
@@ -399,12 +430,12 @@ public final class SubCommands {
 
             VoicechatConnection connection = Objects.requireNonNull(api.getConnectionOf(platform.commandContextToPlayer(sender)));
             if (connection.getGroup() == null) {
-                platform.sendMessage(sender, "<red>You are not in a group!");
+                platform.sendMessage(sender, Component.red("You are not in a group!"));
                 return;
             }
             connection.setGroup(null);
 
-            platform.sendMessage(sender, "<green>Successfully left the group.");
+            platform.sendMessage(sender, Component.green("Successfully left the group."));
         }
 
         private static void remove(CommandContext<?> sender) {
@@ -413,16 +444,16 @@ public final class SubCommands {
             Integer friendlyId = sender.getArgument("id", Integer.class);
             UUID groupId = groupFriendlyIds.getKey(friendlyId);
             if (groupId == null) {
-                platform.sendMessage(sender, "<red>Invalid group ID. Please use <white>/dvc group list<red> to see all groups.");
+                platform.sendMessage(sender, Component.red("Invalid group ID. Please use "), Component.white("/dvc group list"), Component.red(" to see all groups."));
                 return;
             }
 
             if (!api.removeGroup(groupId)) {
-                platform.sendMessage(sender, "<red>Couldn't remove the group. This means it either has players in it or it is not persistent.");
+                platform.sendMessage(sender, Component.red("Couldn't remove the group. This means it either has players in it or it is not persistent."));
                 return;
             }
 
-            platform.sendMessage(sender, "<green>Successfully removed the group!");
+            platform.sendMessage(sender, Component.green("Successfully removed the group!"));
         }
     }
 }

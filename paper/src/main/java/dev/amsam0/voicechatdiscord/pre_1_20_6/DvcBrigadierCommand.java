@@ -5,6 +5,8 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
+import dev.amsam0.voicechatdiscord.Component;
+import dev.amsam0.voicechatdiscord.PaperPlatform;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import org.bukkit.Bukkit;
@@ -89,9 +91,8 @@ public final class DvcBrigadierCommand extends Command implements PluginIdentifi
                     .invoke(commands, getListener(sender), commandLabel + argsString, commandLabel);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException |
                  ClassNotFoundException e) {
-            platform.error("Unable to run brigadier command: " + e);
-            platform.debug(e);
-            platform.sendMessage(sender, "<red>Unable to run command. The addon needs to be updated. Please tell your server owner to create a GitHub issue with logs attached.");
+            platform.error("Unable to run brigadier command", e);
+            ((PaperPlatform) platform).sendMessage(sender, Component.red("Unable to run command. The addon needs to be updated. Please tell your server owner to create a GitHub issue with logs attached."));
         }
 
         return true;
@@ -132,9 +133,8 @@ public final class DvcBrigadierCommand extends Command implements PluginIdentifi
                     .join();
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException |
                  ClassNotFoundException e) {
-            platform.error("Unable to get suggestions for brigadier command: " + e);
-            platform.debug(e);
-            platform.sendMessage(sender, "<red>Unable to get suggestions. The addon needs to be updated. Please tell your server owner to create a GitHub issue with logs attached.");
+            platform.error("Unable to get suggestions for brigadier command", e);
+            ((PaperPlatform) platform).sendMessage(sender, Component.red("Unable to get suggestions. The addon needs to be updated. Please tell your server owner to create a GitHub issue with logs attached."));
             return List.of();
         }
     }

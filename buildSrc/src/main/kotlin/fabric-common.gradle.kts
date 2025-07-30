@@ -64,7 +64,6 @@ tasks.shadowJar {
     relocate("org.yaml.snakeyaml", "dev.amsam0.voicechatdiscord.shadow.snakeyaml")
     relocate("com.github.zafarkhaja.semver", "dev.amsam0.voicechatdiscord.shadow.semver")
     relocate("com.google.gson", "dev.amsam0.voicechatdiscord.shadow.gson")
-    relocate("net.kyori", "dev.amsam0.voicechatdiscord.shadow.kyori")
 
     archiveBaseName.set(archivesBaseName)
     archiveClassifier.set("")
@@ -114,23 +113,6 @@ dependencies {
 
     implementation("com.google.code.gson:gson:${Properties.gsonVersion}")
     shadow("com.google.code.gson:gson:${Properties.gsonVersion}")
-
-    implementation("net.kyori:adventure-api:${fabricMetadata.adventureVersion}")
-    shadow("net.kyori:adventure-api:${fabricMetadata.adventureVersion}")
-
-    implementation("net.kyori:adventure-text-minimessage:${fabricMetadata.adventureVersion}")
-    shadow("net.kyori:adventure-text-minimessage:${fabricMetadata.adventureVersion}")
-
-    modImplementation("net.kyori:adventure-platform-fabric:${fabricMetadata.adventurePlatformFabricVersion}")
-    include("net.kyori:adventure-platform-fabric:${fabricMetadata.adventurePlatformFabricVersion}")
-
-    if (!minecraftVersion.startsWith("1.19")) {
-        implementation("net.kyori:adventure-text-serializer-ansi:${fabricMetadata.adventureVersion}")
-        shadow("net.kyori:adventure-text-serializer-ansi:${fabricMetadata.adventureVersion}")
-    } else {
-        implementation("net.kyori:adventure-text-serializer-plain:${fabricMetadata.adventureVersion}")
-        shadow("net.kyori:adventure-text-serializer-plain:${fabricMetadata.adventureVersion}")
-    }
 
     implementation(project(":core"))
     shadow(project(":core"))

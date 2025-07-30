@@ -10,7 +10,6 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 
-@SuppressWarnings("UnstableApiUsage")
 public class Post_1_20_6_CommandHelper implements CommandHelper {
     @Override
     public void registerCommands() {
