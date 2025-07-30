@@ -5,15 +5,18 @@ import de.maxhenkel.voicechat.api.Position;
 import de.maxhenkel.voicechat.api.ServerLevel;
 import de.maxhenkel.voicechat.api.ServerPlayer;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static dev.amsam0.voicechatdiscord.BukkitHelper.getCraftWorld;
 import static dev.amsam0.voicechatdiscord.Core.api;
@@ -209,6 +212,22 @@ public class PaperPlatform implements Platform {
     @Override
     public String getName(de.maxhenkel.voicechat.api.Player player) {
         return ((Player) player.getPlayer()).getName();
+    }
+
+    @Override
+    public void setOnPlayerLeaveHandler(Consumer<UUID> handler) {
+        EventListener.onPlayerLeaveHandler = handler;
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public @Nullable String getSimpleVoiceChatVersion() {
+        Plugin svcPlugin = Bukkit.getServer().getPluginManager().getPlugin("voicechat");
+        if (svcPlugin == null) {
+            error("Simple Voice Chat plugin is null");
+            return null;
+        }
+        return svcPlugin.getDescription().getVersion();
     }
 
     @Override

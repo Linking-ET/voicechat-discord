@@ -33,10 +33,10 @@ public final class Core {
 
     private static native void shutdownNatives();
 
-    /**
-     * IMPORTANT: Nothing that runs in this function should depend on SVC's API. We don't know if the SVC is new enough yet
-     */
     public static void enable() {
+        // This should happen first
+        checkSimpleVoiceChatVersion(platform.getSimpleVoiceChatVersion());
+
         try {
             LibraryLoader.load("voicechat_discord");
             initializeNatives();
@@ -46,6 +46,8 @@ public final class Core {
         }
 
         loadConfig();
+
+        platform.setOnPlayerLeaveHandler(Core::onPlayerLeave);
     }
 
     public static void disable() {
@@ -134,20 +136,16 @@ public final class Core {
 
     public static void clearBots() {
         bots.forEach(discordBot -> {
-            try {
-                discordBot.stop();
-            } catch (Throwable e) {
-                platform.error("Error when stopping bot", e);
-            }
+            discordBot.stop();
             discordBot.free();
         });
         bots.clear();
     }
 
-    public static void onPlayerLeave(UUID playerUuid) {
+    private static void onPlayerLeave(UUID playerUuid) {
         DiscordBot bot = getBotForPlayer(playerUuid);
         if (bot != null) {
-            platform.info("Stopping bot");
+            platform.info("Stopping bot for player " + playerUuid);
             bot.stop();
         }
     }
@@ -174,7 +172,7 @@ public final class Core {
         return null;
     }
 
-    public static void checkSVCVersion(@Nullable String version) {
+    private static void checkSimpleVoiceChatVersion(@Nullable String version) {
         if (version != null) {
             platform.debug("SVC version: " + version);
             String[] splitVersion = version.split("-");

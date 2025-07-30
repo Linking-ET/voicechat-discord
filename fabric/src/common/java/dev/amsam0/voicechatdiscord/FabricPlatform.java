@@ -6,6 +6,9 @@ import de.maxhenkel.voicechat.api.Position;
 import de.maxhenkel.voicechat.api.ServerLevel;
 import de.maxhenkel.voicechat.api.ServerPlayer;
 import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.command.ServerCommandSource;
@@ -19,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static dev.amsam0.voicechatdiscord.Constants.PLUGIN_ID;
 import static dev.amsam0.voicechatdiscord.Core.api;
@@ -98,6 +102,21 @@ public class FabricPlatform implements Platform {
     @Override
     public String getName(Player player) {
         return ((PlayerEntity) player.getPlayer()).getName().getString();
+    }
+
+    @Override
+    public void setOnPlayerLeaveHandler(Consumer<UUID> handler) {
+        ServerPlayConnectionEvents.DISCONNECT.register((minecraft_handler, server) -> handler.accept(minecraft_handler.player.getUuid()));
+    }
+
+    @Override
+    public @Nullable String getSimpleVoiceChatVersion() {
+        ModContainer svcMod = FabricLoader.getInstance().getModContainer("voicechat").orElse(null);
+        if (svcMod == null) {
+            error("Simple Voice Chat mod is null");
+            return null;
+        }
+        return svcMod.getMetadata().getVersion().toString();
     }
 
     @Override

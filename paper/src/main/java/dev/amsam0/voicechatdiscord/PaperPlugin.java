@@ -8,20 +8,17 @@ import dev.amsam0.voicechatdiscord.pre_1_20_6.Pre_1_20_6_CommandHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import static dev.amsam0.voicechatdiscord.Constants.PLUGIN_ID;
 import static dev.amsam0.voicechatdiscord.Core.*;
 
-public final class PaperPlugin extends JavaPlugin implements Listener {
+public final class PaperPlugin extends JavaPlugin {
     public static final Logger LOGGER = LogManager.getLogger(PLUGIN_ID);
     public static PaperPlugin INSTANCE;
     public static CommandHelper commandHelper;
 
+    private final EventListener eventListener = new EventListener();
     private PaperVoicechatPlugin voicechatPlugin;
 
     public static PaperPlugin get() {
@@ -80,11 +77,7 @@ public final class PaperPlugin extends JavaPlugin implements Listener {
 
         enable();
 
-        Plugin svcPlugin = getServer().getPluginManager().getPlugin("voicechat");
-        //noinspection deprecation
-        checkSVCVersion(svcPlugin != null ? svcPlugin.getDescription().getVersion() : null);
-
-        Bukkit.getPluginManager().registerEvents(this, this);
+        Bukkit.getPluginManager().registerEvents(eventListener, this);
 
         commandHelper.registerCommands();
     }
@@ -97,10 +90,5 @@ public final class PaperPlugin extends JavaPlugin implements Listener {
             getServer().getServicesManager().unregister(voicechatPlugin);
             LOGGER.info("Successfully unregistered voicechat discord plugin");
         }
-    }
-
-    @EventHandler
-    public void playerLeave(PlayerQuitEvent e) {
-        onPlayerLeave(e.getPlayer().getUniqueId());
     }
 }
