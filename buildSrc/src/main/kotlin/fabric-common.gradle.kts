@@ -100,8 +100,8 @@ dependencies {
 //    }
 
     // This includes fabric-api - things will break because it has a newer version than what we use
-    modImplementation("me.lucko:fabric-permissions-api:${fabricMetadata.permissionsApiVersion}") { exclude(group = "net.fabricmc.fabric-api") }
-    include("me.lucko:fabric-permissions-api:${fabricMetadata.permissionsApiVersion}") { exclude(group = "net.fabricmc.fabric-api") }
+    modImplementation("me.lucko:fabric-permissions-api:0.3.1") { exclude(group = "net.fabricmc.fabric-api") }
+    include("me.lucko:fabric-permissions-api:0.3.1") { exclude(group = "net.fabricmc.fabric-api") }
 
     compileOnly("de.maxhenkel.voicechat:voicechat-api:${Properties.voicechatApiVersion}")
 
